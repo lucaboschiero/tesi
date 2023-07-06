@@ -107,6 +107,8 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
 
     train_cols: DataFrame=None
 
+    #print(data)
+
     df = TRACE_TO_DF[CONF['feature_selection']](
         data,
         prefix_length=CONF['prefix_length'],

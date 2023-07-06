@@ -22,6 +22,7 @@ def simple_features(log, prefix_length, padding, prefix_length_strategy: str, la
                 encoded_data.append(_trace_to_row(trace, event_index, columns_number, prefix_length_strategy, padding, labeling_type))
         else:
             encoded_data.append(_trace_to_row(trace, trace_prefix_length, columns_number, prefix_length_strategy, padding, labeling_type))
+        #print("Encoded data: ",encoded_data)
     return DataFrame(columns=columns, data=encoded_data)
 
 
@@ -39,13 +40,39 @@ def _trace_prefixes(trace, prefix_length: int) -> list:
     """List of indexes of the position they are in event_names
 
     """
+
+    prefixes = []
+    counter = 0
+    for idx, event in enumerate(trace):
+        if counter >= prefix_length:
+            break
+        for attribute_key, attribute_value in event.items():
+            if counter == prefix_length:
+                break
+            if not (attribute_value == 'True' or attribute_value == 'False'):
+                event_attribute = attribute_value
+                #print("Value:",event_attribute)
+                counter = counter + 1
+                prefixes.append(event_attribute)
+            if counter == prefix_length:
+                break
+            if attribute_value == 'True':
+                event_attribute = attribute_key
+                #print(event_attribute)
+                counter = counter + 1
+                prefixes.append(event_attribute)
+        #print(prefixes)
+    return prefixes
+"""
     prefixes = []
     for idx, event in enumerate(trace):
         if idx == prefix_length:
             break
-        event_name = event['concept:name']
+        event_name = event["concept:name"]
         prefixes.append(event_name)
+        print(prefixes)
     return prefixes
+    """
 
 
 def _compute_columns(prefix_length: int) -> list:

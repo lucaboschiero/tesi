@@ -13,7 +13,6 @@ class Encoder:
         self._label_dict = {}
         self._label_dict_decoder = {}
         for column in df:
-
             if column != 'trace_id':
                 if df[column].dtype != int or (df[column].dtype == int and np.any(df[column] < 0)):
 
