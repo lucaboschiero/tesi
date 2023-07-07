@@ -49,7 +49,7 @@ def _trace_prefixes(trace, prefix_length: int) -> list:
         for attribute_key, attribute_value in event.items():
             if counter == prefix_length:
                 break
-            if not (attribute_value == 'True' or attribute_value == 'False'):
+            if not (attribute_value == 'True' or attribute_value == 'False') and (not (contains_numbers_iterative(str(attribute_value)))):
                 event_attribute = attribute_value
                 #print("Value:",event_attribute)
                 counter = counter + 1
@@ -73,6 +73,12 @@ def _trace_prefixes(trace, prefix_length: int) -> list:
         print(prefixes)
     return prefixes
     """
+
+def contains_numbers_iterative(string):
+    for char in string:
+        if char.isdigit():
+            return True
+    return False
 
 
 def _compute_columns(prefix_length: int) -> list:
