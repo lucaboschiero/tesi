@@ -123,7 +123,21 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
 
     encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
     encoder.encode(df=df)
-    print(df)
+    #encoder.decode(df=df)
+    
+    """
+    result = []
+    for index, row in df.iterrows():
+        # Access row values using row['column_name'] or row[column_index]
+        trace_id = row['trace_id']
+        prefix_1 = row['prefix_1']
+        prefix_2 = row['prefix_2']
+        prefix_3 = row['prefix_3']
+        label = row['label']
+        result.append((trace_id, prefix_1, prefix_2, prefix_3, label))
+        # Do something with the row values
+        print("Result: ", result)
+    """
 
     dt_input_trainval = encode_traces(data, frequent_events=frequent_events_train, frequent_pairs=frequent_pairs_train,
                                       checkers=checkers, rules=rules, labeling=labeling)
