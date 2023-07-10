@@ -19,19 +19,18 @@ TRACE_TO_DF = {
 }
 
 def encode_traces(log, frequent_events, frequent_pairs, checkers, rules, labeling):
-
     event_checkers = list(filter(lambda checker: checker in [ConstraintChecker.EXISTENCE, ConstraintChecker.ABSENCE, ConstraintChecker.INIT, ConstraintChecker.EXACTLY], checkers))
     pair_checkers = list(filter(lambda checker: checker not in [ConstraintChecker.EXISTENCE, ConstraintChecker.ABSENCE, ConstraintChecker.INIT, ConstraintChecker.EXACTLY], checkers))
-    
+
     CONF = {  # This contains the configuration for the run
-                'data': log,
-                'prefix_length_strategy': 'fixed',
-                'prefix_length': 3,
-                'padding': True,  # TODO: why use of padding?
-                'feature_selection': 'simple',
-                'task_generation_type': 'all_in_one',
-                'attribute_encoding': 'label',  # LABEL
-                'labeling_type': LabelTypes.ATTRIBUTE_STRING,
+        'data': log,
+        'prefix_length_strategy': 'fixed',
+        'prefix_length': 3,
+        'padding': True,  # TODO: why use of padding?
+        'feature_selection': 'simple',
+        'task_generation_type': 'all_in_one',
+        'attribute_encoding': 'label',  # LABEL
+        'labeling_type': LabelTypes.ATTRIBUTE_STRING,
     }
     train_cols: DataFrame=None
 
@@ -47,24 +46,25 @@ def encode_traces(log, frequent_events, frequent_pairs, checkers, rules, labelin
     )
 
     encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
+    encoder.encode(df=df)
 
     features = []
     encoded_data = []
-    
-    for trace in log:
-        encoder.encode(df=trace)
+    print("df: ",df)
+    for index, row in df.iterrows():       
+        #print("Trace: ", trace)
         trace_result = {}
         for a in frequent_events:
             for checker in event_checkers:
                 key = checker.value + "[" + a + "]"
-                trace_result[key] = trace
+                trace_result[key] = row
         for (a, b) in frequent_pairs:
             for checker in pair_checkers:
                 key = checker.value + "[" + a + "," + b +"]"
-                trace_result[key] = trace
+                trace_result[key] = row
         if not features:
             features = list(trace_result.keys())
         encoded_data.append(list(trace_result.values()))
-        #print("Encoded data: ",encoded_data)
+        print("Encoded data: ",encoded_data)
     labels = generate_labels(log, labeling)
     return DTInput(features, encoded_data, labels)
