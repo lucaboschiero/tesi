@@ -15,7 +15,7 @@ compute_gain = False
 smooth_factor = 1
 num_classes = 2
 train_prefix_log = False
-one_hot_encoding = True
+one_hot_encoding = False
 use_score = True
 compute_baseline = False
 

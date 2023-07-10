@@ -93,7 +93,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-
+    """
     CONF = {  # This contains the configuration for the run
             'data': data,
             'prefix_length_strategy': 'fixed',
@@ -104,11 +104,12 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             'attribute_encoding': 'label',  # LABEL
             'labeling_type': LabelTypes.ATTRIBUTE_STRING,
     }
+    """
 
-    train_cols: DataFrame=None
+    #train_cols: DataFrame=None
 
     #print(data)
-
+    """
     df = TRACE_TO_DF[CONF['feature_selection']](
         data,
         prefix_length=CONF['prefix_length'],
@@ -119,12 +120,13 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
         feature_list=train_cols,
         #target_event=CONF['target_event']
     )
+    """
 
 
-    encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
-    encoder.encode(df=df)
-    #encoder.decode(df=df)
+    #encoder = Encoder(df=df, checkers=checkers, attribute_encoding=CONF['attribute_encoding'], frequent_events=frequent_events_train, frequent_pairs=frequent_pairs_train)
+    #encoder.encode(df=df)
     
+    #encoder.decode(df=df)
     """
     result = []
     for index, row in df.iterrows():
@@ -142,6 +144,9 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     dt_input_trainval = encode_traces(data, frequent_events=frequent_events_train, frequent_pairs=frequent_pairs_train,
                                       checkers=checkers, rules=rules, labeling=labeling)
 
+    #print("FEATURES: ",dt_input_trainval.features)
+    #print("ENCODED_DATA: ",dt_input_trainval.encoded_data)
+    #print("LABELS: ",dt_input_trainval.labels)
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
 
