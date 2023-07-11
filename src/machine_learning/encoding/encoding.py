@@ -47,24 +47,18 @@ def encode_traces(log, frequent_events, frequent_pairs, checkers, rules, labelin
 
     encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
     encoder.encode(df=df)
+    print(df)
 
     features = []
     encoded_data = []
-    print("df: ",df)
-    for index, row in df.iterrows():       
-        #print("Trace: ", trace)
-        trace_result = {}
-        for a in frequent_events:
-            for checker in event_checkers:
-                key = checker.value + "[" + a + "]"
-                trace_result[key] = row
-        for (a, b) in frequent_pairs:
-            for checker in pair_checkers:
-                key = checker.value + "[" + a + "," + b +"]"
-                trace_result[key] = row
-        if not features:
-            features = list(trace_result.keys())
-        encoded_data.append(list(trace_result.values()))
-        print("Encoded data: ",encoded_data)
+    column_names = list(df.columns)
+    for index, row in df.iterrows():  
+        encoded_data.append(list(row))     
+    if not features:
+        features = list(column_names)
+        
+    #print("Encoded data: ",encoded_data)
+    #print("Features: ",features)
+
     labels = generate_labels(log, labeling)
     return DTInput(features, encoded_data, labels)
