@@ -13,22 +13,21 @@ class Encoder:
         self._label_dict = {}
         self._label_dict_decoder = {}
         for column in df:
-            if column != 'trace_id':
-                if df[column].dtype != int or (df[column].dtype == int and np.any(df[column] < 0)):
+            if df[column].dtype != int or (df[column].dtype == int and np.any(df[column] < 0)):
 
-                    if attribute_encoding == "label":
-                        self._encoder[column] = LabelEncoder().fit(
-                            sorted(pd.concat([pd.Series([str(PADDING_VALUE)]), df[column].apply(lambda x: str(x))])))
-                        #print("Encoder[column]: ", self._encoder[column])
-                        classes = self._encoder[column].classes_
-                        transforms = self._encoder[column].transform(classes)
-                        #print(transforms)
-                        self._label_dict[column] = dict(zip(classes, transforms))
-                        self._label_dict_decoder[column] = dict(zip(transforms, classes))
-                        print("ENCODER: ", self._label_dict[column])
-                        print("DECODER: ",self._label_dict_decoder[column])
-                    else:
-                        pass
+                if attribute_encoding == "label":
+                    self._encoder[column] = LabelEncoder().fit(
+                        sorted(pd.concat([pd.Series([str(PADDING_VALUE)]), df[column].apply(lambda x: str(x))])))
+                    #print("Encoder[column]: ", self._encoder[column])
+                    classes = self._encoder[column].classes_
+                    transforms = self._encoder[column].transform(classes)
+                    #print(transforms)
+                    self._label_dict[column] = dict(zip(classes, transforms))
+                    self._label_dict_decoder[column] = dict(zip(transforms, classes))
+                    print("ENCODER: ", self._label_dict[column])
+                    print("DECODER: ",self._label_dict_decoder[column])
+                else:
+                    pass
 
     def encode(self, df: DataFrame) -> None:
         for column in df:

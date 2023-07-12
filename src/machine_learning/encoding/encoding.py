@@ -18,10 +18,8 @@ TRACE_TO_DF = {
     # EncodingType.DECLARE.value : declare_features
 }
 
-def encode_traces(log, frequent_events, frequent_pairs, checkers, rules, labeling):
-    event_checkers = list(filter(lambda checker: checker in [ConstraintChecker.EXISTENCE, ConstraintChecker.ABSENCE, ConstraintChecker.INIT, ConstraintChecker.EXACTLY], checkers))
-    pair_checkers = list(filter(lambda checker: checker not in [ConstraintChecker.EXISTENCE, ConstraintChecker.ABSENCE, ConstraintChecker.INIT, ConstraintChecker.EXACTLY], checkers))
-
+def encode_traces(log, labeling):
+    
     CONF = {  # This contains the configuration for the run
         'data': log,
         'prefix_length_strategy': 'fixed',
@@ -47,18 +45,20 @@ def encode_traces(log, frequent_events, frequent_pairs, checkers, rules, labelin
 
     encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
     encoder.encode(df=df)
-    print(df)
+    #print(df)
 
     features = []
     encoded_data = []
-    column_names = list(df.columns)
+    labels = []
+    column_names = list(df.columns[0:4])
     for index, row in df.iterrows():  
-        encoded_data.append(list(row))     
+        labels.append(row['label'] -1)
+        encoded_data.append(list(row[0:4]))  
     if not features:
         features = list(column_names)
         
     #print("Encoded data: ",encoded_data)
     #print("Features: ",features)
-
-    labels = generate_labels(log, labeling)
+    #print(encoded_data)
+    #print("Labels: ",labels)
     return DTInput(features, encoded_data, labels)

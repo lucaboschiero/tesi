@@ -93,56 +93,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-    """
-    CONF = {  # This contains the configuration for the run
-            'data': data,
-            'prefix_length_strategy': 'fixed',
-            'prefix_length': 3,
-            'padding': True,  # TODO: why use of padding?
-            'feature_selection': 'simple',
-            'task_generation_type': 'all_in_one',
-            'attribute_encoding': 'label',  # LABEL
-            'labeling_type': LabelTypes.ATTRIBUTE_STRING,
-    }
-    """
-
-    #train_cols: DataFrame=None
-
-    #print(data)
-    """
-    df = TRACE_TO_DF[CONF['feature_selection']](
-        data,
-        prefix_length=CONF['prefix_length'],
-        padding=CONF['padding'],
-        prefix_length_strategy=CONF['prefix_length_strategy'],
-        labeling_type=CONF['labeling_type'],
-        generation_type=CONF['task_generation_type'],
-        feature_list=train_cols,
-        #target_event=CONF['target_event']
-    )
-    """
-
-
-    #encoder = Encoder(df=df, checkers=checkers, attribute_encoding=CONF['attribute_encoding'], frequent_events=frequent_events_train, frequent_pairs=frequent_pairs_train)
-    #encoder.encode(df=df)
-    
-    #encoder.decode(df=df)
-    """
-    result = []
-    for index, row in df.iterrows():
-        # Access row values using row['column_name'] or row[column_index]
-        trace_id = row['trace_id']
-        prefix_1 = row['prefix_1']
-        prefix_2 = row['prefix_2']
-        prefix_3 = row['prefix_3']
-        label = row['label']
-        result.append((trace_id, prefix_1, prefix_2, prefix_3, label))
-        # Do something with the row values
-        print("Result: ", result)
-    """
-
-    dt_input_trainval = encode_traces(data, frequent_events=frequent_events_train, frequent_pairs=frequent_pairs_train,
-                                      checkers=checkers, rules=rules, labeling=labeling)
+    dt_input_trainval = encode_traces(data, labeling=labeling)
 
     #print("FEATURES: ",dt_input_trainval.features)
     #print("ENCODED_DATA: ",dt_input_trainval.encoded_data)
@@ -178,6 +129,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
                                         # class_names=['regular', 'deviant'])
         graph = graphviz.Source(dot_data, format="pdf")
         graph.render(os.path.join(settings.output_dir, f'DT_{dataset_name}_{constr_family}'))
+    
     return model_dict, new_feature_names
 
 
