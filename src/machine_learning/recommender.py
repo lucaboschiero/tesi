@@ -408,8 +408,7 @@ def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
     return eval_res
 
 
-def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, support_threshold, checkers,
-                                            rules, paths, dataset_name, hyperparams_evaluation, eval_res=None, debug=False):
+def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, eval_res=None, debug=False):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
@@ -427,7 +426,6 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
-
     print("Generating recommendations ...")
     recommendations = []
     if eval_res is None:

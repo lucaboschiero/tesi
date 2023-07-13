@@ -138,17 +138,15 @@ def rec_sys_exp(dataset_name):
                 for pref_id, prefix_len in enumerate(prefix_lenght_list_val):
                     prefixing = {
                         "type": PrefixType.ONLY,
-                        "length": prefix_len
+                        #"length": prefix_len
+                        "length": 3
                     }
                     recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
                                                                                           train_log=train_log,
                                                                                           labeling=labeling,
                                                                                           prefixing=prefixing,
-                                                                                          support_threshold=settings.support_threshold_dict,
-                                                                                          checkers=settings.checkers[constr_family],
                                                                                           rules=settings.rules,
                                                                                           paths=tmp_paths,
-                                                                                          dataset_name=dataset_name,
                                                                                           hyperparams_evaluation=hyperparams_evaluation,
                                                                                           eval_res=eval_res)
                     if settings.cumulative_res is True:

@@ -45,7 +45,7 @@ TRACE_TO_DF = {
 def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, support_threshold_dict, render_dt, num_feat_strategy):
     print("DT params optimization ...")
     categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
-    model_dict = {'dataset_name': dataset_name, 'constr_family': constr_family, 'parameters': (),
+    model_dict = {'dataset_name': dataset_name, 'parameters': (),
                   'f1_score_val': None, 'f1_score_train': None, 'f1_prefix_val': None, 'max_depth': 0,
                   'model': None}
 
@@ -95,21 +95,22 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
 
     dt_input_trainval = encode_traces(data, labeling=labeling)
 
-    #print("FEATURES: ",dt_input_trainval.features)
-    #print("ENCODED_DATA: ",dt_input_trainval.encoded_data)
-    #print("LABELS: ",dt_input_trainval.labels)
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
 
+    """
     if num_feat_strategy == 'sqrt':
         num_feat = int(math.sqrt(len(dt_input_trainval.features)))
     else:
         num_feat = int(num_feat_strategy * len(dt_input_trainval.features))
-
+    """
+    num_feat = len(dt_input_trainval.features) -1
     sel = SelectKBest(mutual_info_classif, k=num_feat)
-    X_train = sel.fit_transform(X_train, y_train)
-    cols = sel.get_support(indices=True)
-    new_feature_names = np.array(dt_input_trainval.features)[cols]
+    X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
+    #cols = sel.get_support(indices=True)
+    new_feature_names = np.array(dt_input_trainval.features)[1:4]
+    #print(new_feature_names)
+    #print(X_train)
 
     print("Grid search ...")
     search = GridSearchCV(estimator=DecisionTreeClassifier(random_state=0), param_grid=settings.dt_hyperparameters, scoring="f1", return_train_score=True, cv=5)
@@ -128,7 +129,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
                                         feature_names=new_feature_names, node_ids=True, filled=True)
                                         # class_names=['regular', 'deviant'])
         graph = graphviz.Source(dot_data, format="pdf")
-        graph.render(os.path.join(settings.output_dir, f'DT_{dataset_name}_{constr_family}'))
+        graph.render(os.path.join(settings.output_dir, f'DT_{dataset_name}'))
     
     return model_dict, new_feature_names
 
@@ -244,7 +245,6 @@ def generate_decision_tree_paths(dt_input, target_label):
     y = pd.Categorical(dt_input.labels, categories=categories)
     dtc = DecisionTreeClassifier(class_weight=None, random_state=0)
     dtc.fit(X, y)
-
     # find paths
     print("Finding decision tree paths ...")
     left = dtc.tree_.children_left
