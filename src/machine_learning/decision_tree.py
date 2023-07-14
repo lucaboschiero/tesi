@@ -97,7 +97,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
 
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
-
+    print(X_train)
     """
     if num_feat_strategy == 'sqrt':
         num_feat = int(math.sqrt(len(dt_input_trainval.features)))
@@ -115,7 +115,6 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     print("Grid search ...")
     search = GridSearchCV(estimator=DecisionTreeClassifier(random_state=0), param_grid=settings.dt_hyperparameters, scoring="f1", return_train_score=True, cv=5)
     search.fit(X_train, y_train)
-
     model_dict['model'] = search.best_estimator_
     f1_score_train = round(100*search.cv_results_['mean_train_score'][search.best_index_], 2)
     model_dict['f1_score_val'] = round(100*search.best_score_, 2)
@@ -123,6 +122,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     model_dict['f1_prefix_val'] = -1
     model_dict['max_depth'] = search.best_estimator_.tree_.max_depth
     model_dict['parameters'] = tuple(search.best_params_.values())
+    #print(model_dict['model'])
 
     if render_dt:
         dot_data = tree.export_graphviz(search.best_estimator_, out_file=None, impurity=True,
@@ -188,6 +188,7 @@ def generate_paths(dtc, dt_input_features, target_label):
     if target_label == TraceLabel.TRUE:
         leaf_ids_positive = filter(
             lambda leaf_id: dtc.tree_.value[leaf_id][0][0] < dtc.tree_.value[leaf_id][0][1], leaf_ids)
+            
     else:
         leaf_ids_positive = filter(
             lambda leaf_id: dtc.tree_.value[leaf_id][0][0] > dtc.tree_.value[leaf_id][0][1], leaf_ids)
@@ -225,70 +226,6 @@ def generate_paths(dtc, dt_input_features, target_label):
         else:
             num_samples = {
                 "node_samples": dtc.tree_.n_node_samples[leaf_id],
-                "negative": dtc.tree_.value[leaf_id][0][1],
-                "positive": dtc.tree_.value[leaf_id][0][0],
-                "total": dtc.tree_.value[leaf_id][0][0] + dtc.tree_.value[leaf_id][0][1]
-            }
-        path = PathModel(
-            impurity=dtc.tree_.impurity[leaf_id],
-            num_samples=num_samples,
-            rules=rules
-        )
-        paths.append(path)
-    return paths
-
-
-def generate_decision_tree_paths(dt_input, target_label):
-    categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
-
-    X = pd.DataFrame(dt_input.encoded_data, columns=dt_input.features)
-    y = pd.Categorical(dt_input.labels, categories=categories)
-    dtc = DecisionTreeClassifier(class_weight=None, random_state=0)
-    dtc.fit(X, y)
-    # find paths
-    print("Finding decision tree paths ...")
-    left = dtc.tree_.children_left
-    right = dtc.tree_.children_right
-    features = [dt_input.features[i] for i in dtc.tree_.feature]
-    leaf_ids = np.argwhere(left == -1)[:, 0]
-    if target_label == TraceLabel.TRUE:
-        leaf_ids_positive = filter(
-            lambda leaf_id: dtc.tree_.value[leaf_id][0][0] < dtc.tree_.value[leaf_id][0][1], leaf_ids)
-    else:
-        leaf_ids_positive = filter(
-            lambda leaf_id: dtc.tree_.value[leaf_id][0][0] > dtc.tree_.value[leaf_id][0][1], leaf_ids)
-
-    def recurse(left, right, child, lineage=None):
-        if lineage is None:
-            lineage = []
-        if child in left:
-            parent = np.where(left == child)[0].item()
-            state = TraceState.VIOLATED
-        else:
-            parent = np.where(right == child)[0].item()
-            state = TraceState.SATISFIED
-
-        lineage.append((features[parent], state))
-
-        if parent == 0:
-            lineage.reverse()
-            return lineage
-        else:
-            return recurse(left, right, parent, lineage)
-
-    paths = []
-    for leaf_id in leaf_ids_positive:
-        rules = []
-        for node in recurse(left, right, leaf_id):
-            rules.append(node)
-        if target_label == TraceLabel.TRUE:
-            num_samples = {
-                "negative": dtc.tree_.value[leaf_id][0][0],
-                "positive": dtc.tree_.value[leaf_id][0][1],
-                "total": dtc.tree_.value[leaf_id][0][0] + dtc.tree_.value[leaf_id][0][1]
-            }
-        else:
-            num_samples = {
                 "negative": dtc.tree_.value[leaf_id][0][1],
                 "positive": dtc.tree_.value[leaf_id][0][0],
                 "total": dtc.tree_.value[leaf_id][0][0] + dtc.tree_.value[leaf_id][0][1]

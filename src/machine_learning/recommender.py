@@ -54,7 +54,6 @@ class ParamsOptimizer:
 
             # Generating decision tree and its score on a validation set
             dtc, f1_score_val, f1_score_train = generate_decision_tree(X_train, X_val, y_train, y_val, class_weight=param_tuple[1], min_samples_split=param_tuple[2])
-            print(param_tuple)
             paths = generate_paths(dtc=dtc, dt_input_features=dt_input_train.features, target_label=self.labeling["target"])
 
             # Evaluation on val set prefixes
@@ -109,57 +108,6 @@ class ParamsOptimizer:
         del best_model_dict["frequent_pairs"]
         return best_model_dict, dt_input_trainval.features
 
-    def params_grid_search_old(self, dataset_name, constr_family):
-        categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
-
-        for param_id, param_tuple in enumerate(self.param_grid):
-            model_dict = {'dataset_name': dataset_name, 'constr_family': constr_family, 'parameters': param_tuple,
-                          'f1_score_val': None, 'f1_score_train': None, 'max_depth': 0, 'id': param_id, 'model': None,
-                          'dt_input_features': None}
-
-            (frequent_events, frequent_pairs) = generate_frequent_events_and_pairs(self.train_log, param_tuple[0])
-
-            # Generating decision tree input
-            dt_input = encode_traces(log=self.train_log, frequent_events=frequent_events, frequent_pairs=frequent_pairs,
-                                     checkers=self.checkers, rules=self.rules, labeling=self.labeling)
-
-            X = pd.DataFrame(dt_input.encoded_data, columns=dt_input.features)
-            y = pd.Categorical(dt_input.labels, categories=categories)
-            # X_new = SelectKBest(mutual_info_classif, k=int(0.7*X.shape[1])).fit_transform(X, y)
-
-            # Tree
-            # clf = ExtraTreesClassifier(n_estimators=50)
-            # clf = clf.fit(X, y)
-            # model = SelectFromModel(clf, prefit=True)
-            # X_new = model.transform(X)
-
-            X_new = X
-            # Create the RFE object and compute a cross-validated score.
-            # svc = SVC(kernel="linear")
-            # rfe = RFE(estimator=svc, step=1)
-            # rfe.fit(X, y)
-            # X_new = rfe.transform(X)
-
-            print(X_new.shape)
-
-            X_train, X_val, y_train, y_val = train_test_split(X_new, y, test_size=0.1, random_state=42)
-
-            # Generating decision tree and its score on a validation set
-            dtc, f1_score_val, f1_score_train = generate_decision_tree(X_train, X_val, y_train, y_val,
-                                                                       class_weight=param_tuple[1],
-                                                                       min_samples_split=param_tuple[2])
-            model_dict['model'] = dtc
-            model_dict['max_depth'] = dtc.tree_.max_depth
-            model_dict['f1_score_val'] = f1_score_val
-            model_dict['f1_score_train'] = f1_score_train
-            model_dict['dt_input_features'] = dt_input.features
-            self.model_grid.append(model_dict)
-
-        sorted_models = sorted(self.model_grid, key=lambda d: d['f1_score_val'])
-        best_model_dict = sorted_models[-1]
-        return best_model_dict
-
-
 def recommend(prefix, path, rules):
     recommendation = ""
     for rule in path.rules:
@@ -193,43 +141,6 @@ def recommend(prefix, path, rules):
             elif result.state == TraceState.POSSIBLY_SATISFIED:
                 recommendation += template + " should be VIOLATED. "
     return recommendation
-
-
-def evaluate_OLD(trace, path, rules, labeling):
-    # Compliantness 0/1
-    is_compliant = True
-    for rule in path.rules:
-        template, rule_state, _, _ = rule
-        template_name, template_params = parse_method(template)
-
-        result = None
-        if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], rules)
-        else:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], template_params[1], rules)
-
-        # if traccia compliant with path
-        if rule_state != result.state:
-            is_compliant = False
-            break
-
-    label = generate_label(trace, labeling)
-
-    if labeling["target"] == TraceLabel.TRUE:
-        if is_compliant:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
-            # print(f"1,{label},{cm}")
-        else:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-            # print(f"0,{label},{cm}")
-    else:
-        print("---------------------")
-        if is_compliant:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-        else:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
-    return is_compliant, cm
-
 
 def evaluate(trace, path, rules, labeling, sat_threshold, eval_type='strong'):
     # Compliantness con different strategies
