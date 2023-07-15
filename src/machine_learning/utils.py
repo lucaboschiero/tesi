@@ -93,7 +93,7 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type):
     #print(prefixes)
 
     for rule in path.rules:
-        feature, parent = rule
+        feature, state,  parent = rule
         #print("Feature:", feature)
         #print("Parent:", parent)
         #print("---")
