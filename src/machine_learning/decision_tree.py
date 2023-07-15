@@ -98,6 +98,10 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
     print(X_train)
+
+    X_train = X_train.astype(str)
+    one_hot_data = pd.get_dummies(X_train[['prefix_1', 'prefix_2', 'prefix_3']] , drop_first=True)
+    print(one_hot_data)
     """
     if num_feat_strategy == 'sqrt':
         num_feat = int(math.sqrt(len(dt_input_trainval.features)))
@@ -203,7 +207,7 @@ def generate_paths(dtc, dt_input_features, target_label):
             parent = np.where(right == child)[0].item()
             state = TraceState.SATISFIED
 
-        lineage.append((features[parent], state, parent))
+        lineage.append((features[parent],state, parent))
 
         if parent == 0:
             lineage.reverse()
