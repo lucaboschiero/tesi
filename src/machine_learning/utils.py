@@ -99,6 +99,9 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes
         print("Feature:", feature)
         print("Parent:", parent)
         print("State: ", state)
+        if (parent!=0): parent =parent-1
+        print(thresholds[parent])
+    print("----------")
     fitness = 1
 
     for rule_idx, rule in enumerate(path.rules):
