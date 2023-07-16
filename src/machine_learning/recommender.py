@@ -240,9 +240,9 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
         w.writerow(row[:-1]) # do not print the model
 
     print("Generating decision tree paths ...")
-    paths = generate_paths(dtc=best_model_dict['model'], dt_input_features=feature_names,
+    paths, thresholds, nodes = generate_paths(dtc=best_model_dict['model'], dt_input_features=feature_names,
                            target_label=target_label)
-    return paths
+    return paths, thresholds, nodes
 
 
 def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
@@ -319,21 +319,12 @@ def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
     return eval_res
 
 
-def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, eval_res=None, debug=False):
+def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, thresholds, nodes, eval_res=None, debug=False):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
     target_label = labeling["target"]
 
-    """ Old code without parameters optimization
-    (frequent_events, frequent_pairs) = generate_frequent_events_and_pairs(train_log, support_threshold)
-    
-    print("Generating decision tree input ...")
-    dt_input = encode_traces(train_log, frequent_events=frequent_events, frequent_pairs=frequent_pairs, checkers=checkers, rules=rules, labeling=labeling)
-
-    print("Generating decision tree ...")
-    paths = generate_decision_tree_paths(dt_input=dt_input, target_label=target_label)
-    """
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
@@ -354,7 +345,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
-                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type)
+                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, thresholds, nodes)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
 
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)

@@ -188,6 +188,7 @@ def generate_paths(dtc, dt_input_features, target_label):
     left = dtc.tree_.children_left
     right = dtc.tree_.children_right
     features = [dt_input_features[i] for i in dtc.tree_.feature]
+
     leaf_ids = np.argwhere(left == -1)[:, 0]
     if target_label == TraceLabel.TRUE:
         leaf_ids_positive = filter(
@@ -197,15 +198,28 @@ def generate_paths(dtc, dt_input_features, target_label):
         leaf_ids_positive = filter(
             lambda leaf_id: dtc.tree_.value[leaf_id][0][0] > dtc.tree_.value[leaf_id][0][1], leaf_ids)
 
+    thresholds = []
+    nodes = []
+    for node in range(dtc.tree_.node_count):
+        if node in left or node in right or node==0:
+            threshold = dtc.tree_.threshold[node]
+            if(threshold > 0):
+                nodes.append(node)
+                thresholds.append(round(threshold, 3)) 
+                #print("Node:", node, "Threshold:", round(threshold, 3))
+
+    #print("Nodes: ", nodes)
+    #print("Thresolds: ", thresholds)
+
     def recurse(left, right, child, lineage=None):
         if lineage is None:
             lineage = []
         if child in left:
             parent = np.where(left == child)[0].item()
-            state = TraceState.VIOLATED
+            state = TraceState.SATISFIED
         else:
             parent = np.where(right == child)[0].item()
-            state = TraceState.SATISFIED
+            state = TraceState.VIOLATED
 
         lineage.append((features[parent],state, parent))
 
@@ -240,4 +254,5 @@ def generate_paths(dtc, dt_input_features, target_label):
             rules=rules
         )
         paths.append(path)
-    return paths
+        
+    return paths, thresholds, nodes

@@ -81,7 +81,7 @@ def calcPathFitnessOnPrefixGOOD(prefix, path, rules, fitness_type):
     return fitness
 
 
-def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type):
+def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes):
     path_weights = []
     path_activated_rules = np.zeros(len(path.rules))
     fitness = None
@@ -89,22 +89,22 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type):
     prefixes=[]
     for trace in prefix:
         prefixes.append(trace['concept:name'])
-
     #print(prefixes)
+    #print(prefixes)
+    #print(thresholds)
+    #print(nodes)
 
     for rule in path.rules:
         feature, state,  parent = rule
-        #print("Feature:", feature)
-        #print("Parent:", parent)
-        #print("---")
-
+        print("Feature:", feature)
+        print("Parent:", parent)
+        print("State: ", state)
     fitness = 1
 
-    """
     for rule_idx, rule in enumerate(path.rules):
         template, rule_state, _ = rule
-        template_name, template_params = parse_method(template)
-
+        #template_name, template_params = parse_method(template)
+        """
         result = None
         if settings.use_score:
             if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
@@ -134,7 +134,7 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type):
         fitness = np.mean(path_activated_rules)
     elif fitness_type == 'wmean':
         fitness = np.sum(path_weights*path_activated_rules)/np.sum(path_weights)
-    """
+ """
 
     return fitness
 
