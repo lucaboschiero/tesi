@@ -81,7 +81,7 @@ def calcPathFitnessOnPrefixGOOD(prefix, path, rules, fitness_type):
     return fitness
 
 
-def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes):
+def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes, dt_input_trainval):
     path_weights = []
     path_activated_rules = np.zeros(len(path.rules))
     fitness = None
@@ -93,24 +93,34 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes
     #print(thresholds)
     #print(nodes)
 
-    ref = []
-    vectors = {}
-    vectors[0] = ref
-    counter = 1
 
+    ref = ["", "", ""]
+    #vectors = {}
+    #vectors[0] = ref
+    #counter = 1
+    
     for rule in path.rules:
         feature, state,  parent = rule
-        print("Feature:", feature)
-        print("Parent:", parent)
-        print("State: ", state)
-        if (parent!=0): parent =parent-1
-        print(thresholds[parent])
+        #print("Feature:", feature)
+        #print("prefix: ", feature[-3], "n: ", feature[-1])
+        #print("Parent:", parent)
+        #print("State: ", state)
+        if (parent!=0): parent = parent - 1
+        if(state == TraceState.VIOLATED):
+            ref[int(feature[-3])-1] = -int(feature[-1])
+        else:
+            ref[int(feature[-3])-1] = int(feature[-1])
+        print(ref)
+        out = dt_input_trainval.decode_traces(ref)
+        print(out)
+        """
         if(thresholds[parent] >=2):
             for i in math.floor(thresholds[parent]):
                 vector = []
                 vectors[counter] = vector
                 counter = counter+1
-    print("How many vectors? : ", len(vectors))
+        """
+
     print("----------")
 
     fitness = 1

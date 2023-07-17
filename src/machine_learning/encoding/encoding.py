@@ -12,15 +12,15 @@ from src.machine_learning.encoding.feature_encoder.complex_features import compl
 from src.machine_learning.encoding.data_encoder import *
 
 TRACE_TO_DF = {
-    EncodingType.SIMPLE.value : simple_features,
-    EncodingType.FREQUENCY.value : frequency_features,
-    EncodingType.COMPLEX.value : complex_features,
-    # EncodingType.DECLARE.value : declare_features
+        EncodingType.SIMPLE.value : simple_features,
+        EncodingType.FREQUENCY.value : frequency_features,
+        EncodingType.COMPLEX.value : complex_features,
+        # EncodingType.DECLARE.value : declare_features
 }
 
-def encode_traces(log, labeling):
-    
-    CONF = {  # This contains the configuration for the run
+class Encoding: 
+    def __init__(self, log: DataFrame = None, labeling= None):
+        self.CONF = {  # This contains the configuration for the run
         'data': log,
         'prefix_length_strategy': 'fixed',
         'prefix_length': 3,
@@ -30,35 +30,44 @@ def encode_traces(log, labeling):
         'attribute_encoding': 'label',  # LABEL
         'labeling_type': LabelTypes.ATTRIBUTE_STRING,
     }
-    train_cols: DataFrame=None
+        train_cols: DataFrame=None
 
-    df = TRACE_TO_DF[CONF['feature_selection']](
-        log,
-        prefix_length=CONF['prefix_length'],
-        padding=CONF['padding'],
-        prefix_length_strategy=CONF['prefix_length_strategy'],
-        labeling_type=CONF['labeling_type'],
-        generation_type=CONF['task_generation_type'],
-        feature_list=train_cols,
-        #target_event=CONF['target_event']
-    )
+        self.df = TRACE_TO_DF[self.CONF['feature_selection']](
+            log,
+            prefix_length=self.CONF['prefix_length'],
+            padding=self.CONF['padding'],
+            prefix_length_strategy=self.CONF['prefix_length_strategy'],
+            labeling_type=self.CONF['labeling_type'],
+            generation_type=self.CONF['task_generation_type'],
+            feature_list=train_cols,
+            #target_event=CONF['target_event']
+        )
 
-    encoder = Encoder(df=df, attribute_encoding=CONF['attribute_encoding'])
-    encoder.encode(df=df)
-    #print(df)
+        self.encoder = Encoder(df=self.df, attribute_encoding=self.CONF['attribute_encoding'])
 
-    features = []
-    encoded_data = []
-    labels = []
-    column_names = list(df.columns[0:4])
-    for index, row in df.iterrows():  
-        labels.append(row['label'] -1)
-        encoded_data.append(list(row[0:4]))  
-    if not features:
-        features = list(column_names)
+    def encode_traces(self):
         
-    #print("Encoded data: ",encoded_data)
-    #print("Features: ",features)
-    #print(encoded_data)
-    #print("Labels: ",labels)
-    return DTInput(features, encoded_data, labels)
+        self.encoder.encode(df=self.df)
+        #print(df)
+
+        features = []
+        encoded_data = []
+        labels = []
+        column_names = list(self.df.columns[0:4])
+        for index, row in self.df.iterrows():  
+            labels.append(row['label'] -1)
+            encoded_data.append(list(row[0:4]))  
+        if not features:
+            features = list(column_names)
+            
+        #print("Encoded data: ",encoded_data)
+        #print("Features: ",features)
+        #print(encoded_data)
+        #print("Labels: ",labels)
+        return DTInput(features, encoded_data, labels)
+    
+    def decode_traces(self, log):
+        df_input = pd.DataFrame({'prefix_1': [log[0]], 'prefix_2': [log[1]], 'prefix_3': [log[2]]})
+        self.encoder.decode(df=df_input)
+        return df_input
+        

@@ -93,7 +93,8 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-    dt_input_trainval = encode_traces(data, labeling=labeling)
+    dt_input_trainval = Encoding(data, labeling=labeling)
+    dt_input_trainval = dt_input_trainval.encode_traces()
 
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)

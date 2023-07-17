@@ -39,12 +39,10 @@ class ParamsOptimizer:
                                                                                                param_tuple[0])
 
             # Generating decision tree input
-            dt_input_train = encode_traces(self.train_log, frequent_events=frequent_events_train,
-                                           frequent_pairs=frequent_pairs_train, checkers=self.checkers,
-                                           rules=self.rules, labeling=self.labeling)
-            dt_input_val = encode_traces(self.val_log, frequent_events=frequent_events_train,
-                                         frequent_pairs=frequent_pairs_train, checkers=self.checkers,
-                                         rules=self.rules, labeling=self.labeling)
+            dt_input_train = Encoding(self.train_log, labeling=self.labeling)
+            dt_input_train.encode_traces
+            dt_input_val = Encoding(self.val_log, labeling=self.labeling)
+            dt_input_val.encode_traces
 
             X_train = pd.DataFrame(dt_input_train.encoded_data, columns=dt_input_train.features)
             y_train = pd.Categorical(dt_input_train.labels, categories=categories)
@@ -86,12 +84,10 @@ class ParamsOptimizer:
 
         # (frequent_events_trainval, frequent_pairs_trainval) = generate_frequent_events_and_pairs(self.train_val_log,
         #                                                                                   best_model_dict['parameters'][0])
-        dt_input_trainval = encode_traces(self.train_val_log, frequent_events=best_model_dict['frequent_events'],
-                                          frequent_pairs=best_model_dict['frequent_pairs'], checkers=self.checkers,
-                                          rules=self.rules, labeling=self.labeling)
-        dt_input_val = encode_traces(self.val_log, frequent_events=best_model_dict['frequent_events'],
-                                     frequent_pairs=best_model_dict['frequent_pairs'], checkers=self.checkers,
-                                     rules=self.rules, labeling=self.labeling)
+        dt_input_trainval = Encoding(self.train_val_log, labeling=self.labeling)
+        dt_input_trainval.encode_traces
+        dt_input_val = Encoding(self.val_log, labeling=self.labeling)
+        dt_input_val.encode_traces
 
         X_train_val = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
         y_train_val = pd.Categorical(dt_input_trainval.labels, categories=categories)
@@ -207,8 +203,8 @@ def test_dt(test_log, train_log, labeling, prefixing, support_threshold, checker
     (frequent_events, frequent_pairs) = generate_frequent_events_and_pairs(train_log, support_threshold)
 
     print("Generating decision tree input ...")
-    dt_input = encode_traces(train_log, frequent_events=frequent_events, frequent_pairs=frequent_pairs,
-                             checkers=checkers, rules=rules, labeling=labeling)
+    dt_input = Encoding(train_log, labeling)
+    dt_input.encode_traces
 
     print("Generating decision tree ...")
     return dt_score(dt_input=dt_input)
@@ -325,6 +321,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
 
     target_label = labeling["target"]
 
+    dt_input_trainval = Encoding(train_log, labeling=labeling)
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
@@ -345,7 +342,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
-                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, thresholds, nodes)
+                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, thresholds, nodes, dt_input_trainval)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
 
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
