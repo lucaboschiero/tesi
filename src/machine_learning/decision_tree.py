@@ -101,7 +101,8 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
 
     X_train = X_train.astype(str)
     one_hot_data = pd.get_dummies(X_train[['prefix_1', 'prefix_2', 'prefix_3']] , drop_first=True)
-    print(one_hot_data)
+    #print(one_hot_data.columns)
+    
     """
     if num_feat_strategy == 'sqrt':
         num_feat = int(math.sqrt(len(dt_input_trainval.features)))
@@ -111,14 +112,14 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     num_feat = len(dt_input_trainval.features) -1
     sel = SelectKBest(mutual_info_classif, k=num_feat)
     X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
-    #cols = sel.get_support(indices=True)
-    new_feature_names = np.array(dt_input_trainval.features)[1:4]
+    #new_feature_names = np.array(dt_input_trainval.features)[1:4]
+    new_feature_names = np.array(one_hot_data.columns)
     #print(new_feature_names)
     #print(X_train)
 
     print("Grid search ...")
     search = GridSearchCV(estimator=DecisionTreeClassifier(random_state=0), param_grid=settings.dt_hyperparameters, scoring="f1", return_train_score=True, cv=5)
-    search.fit(X_train, y_train)
+    search.fit(one_hot_data, y_train)
     model_dict['model'] = search.best_estimator_
     f1_score_train = round(100*search.cv_results_['mean_train_score'][search.best_index_], 2)
     model_dict['f1_score_val'] = round(100*search.best_score_, 2)
@@ -216,10 +217,10 @@ def generate_paths(dtc, dt_input_features, target_label):
             lineage = []
         if child in left:
             parent = np.where(left == child)[0].item()
-            state = TraceState.SATISFIED
+            state = TraceState.VIOLATED
         else:
             parent = np.where(right == child)[0].item()
-            state = TraceState.VIOLATED
+            state = TraceState.SATISFIED
 
         lineage.append((features[parent],state, parent))
 

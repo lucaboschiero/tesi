@@ -89,10 +89,14 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes
     prefixes=[]
     for trace in prefix:
         prefixes.append(trace['concept:name'])
-    #print(prefixes)
-    #print(prefixes)
+    print(prefixes)
     #print(thresholds)
     #print(nodes)
+
+    ref = []
+    vectors = {}
+    vectors[0] = ref
+    counter = 1
 
     for rule in path.rules:
         feature, state,  parent = rule
@@ -101,13 +105,20 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes
         print("State: ", state)
         if (parent!=0): parent =parent-1
         print(thresholds[parent])
+        if(thresholds[parent] >=2):
+            for i in math.floor(thresholds[parent]):
+                vector = []
+                vectors[counter] = vector
+                counter = counter+1
+    print("How many vectors? : ", len(vectors))
     print("----------")
+
     fitness = 1
 
+    """
     for rule_idx, rule in enumerate(path.rules):
         template, rule_state, _ = rule
         #template_name, template_params = parse_method(template)
-        """
         result = None
         if settings.use_score:
             if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
