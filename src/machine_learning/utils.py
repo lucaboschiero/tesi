@@ -6,6 +6,7 @@ from src.machine_learning.encoding import *
 from src.machine_learning.apriori import generate_frequent_events_and_pairs
 #from src.machine_learning.decision_tree import generate_decision_tree, generate_paths, generate_boost_decision_tree
 from src.enums import PrefixType
+from src.machine_learning import fitnessEditDistance
 from sklearn.model_selection import train_test_split
 import itertools
 from src.enums import TraceLabel
@@ -81,7 +82,7 @@ def calcPathFitnessOnPrefixGOOD(prefix, path, rules, fitness_type):
     return fitness
 
 
-def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes, dt_input_trainval):
+def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, dt_input_trainval):
     path_weights = []
     path_activated_rules = np.zeros(len(path.rules))
     fitness = None
@@ -90,30 +91,36 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, thresholds, nodes
     for trace in prefix:
         prefixes.append(trace['concept:name'])
     print(prefixes)
-    #print(thresholds)
-    #print(nodes)
+
+    prefixes = dt_input_trainval.encode(prefixes)
+    print(prefixes)
+
+    hyp = []
+    for column in prefixes.columns:
+        hyp.extend(prefixes[column].values)
+    hyp = np.array(hyp)
+    hyp = hyp.tolist()
 
 
     ref = ["", "", ""]
-    #vectors = {}
-    #vectors[0] = ref
-    #counter = 1
     
     for rule in path.rules:
-        feature, state,  parent = rule
-        #print("Feature:", feature)
-        #print("prefix: ", feature[-3], "n: ", feature[-1])
-        #print("Parent:", parent)
-        #print("State: ", state)
-        if (parent!=0): parent = parent - 1
-        if(state == TraceState.VIOLATED):
-            ref[int(feature[-3])-1] = -int(feature[-1])
+        feature, state, parent = rule
+        if parent != 0:
+            parent = parent - 1
+        if state == TraceState.VIOLATED:
+            if isinstance(ref[int(feature[-3]) - 1], list):
+                ref[int(feature[-3]) - 1].append(-int(feature[-1]))
+            else:
+                ref[int(feature[-3]) - 1] = [-int(feature[-1])]
         else:
-            ref[int(feature[-3])-1] = int(feature[-1])
-        print(ref)
-        out = dt_input_trainval.decode_traces(ref)
-        print(out)
-        """
+            ref[int(feature[-3]) - 1] = int(feature[-1])
+        print("ref:", ref)
+
+    fitnessEditDistance.edit(ref, hyp)
+        #out = dt_input_trainval.decode_traces(ref)
+        #print(out)
+    """
         if(thresholds[parent] >=2):
             for i in math.floor(thresholds[parent]):
                 vector = []

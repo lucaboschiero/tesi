@@ -102,6 +102,8 @@ def rec_sys_exp(dataset_name):
     }
     """
 
+    dt_input_trainval = Encoding(train_val_log)
+
     # generate recommendations and evaluation
     results = {family: [] for family in settings.constr_family_list}
     for constr_family in settings.constr_family_list:
@@ -120,9 +122,9 @@ def rec_sys_exp(dataset_name):
                 hyperparams_evaluation_list.append((v1,) + v2)
 
         for feat_strategy in settings.num_feat_strategy:
-            tmp_paths, thresholds, nodes = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
+            tmp_paths = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
                                            checkers=settings.checkers[constr_family], rules=settings.rules, dataset_name=dataset_name, constr_family=constr_family,
-                                           output_dir=settings.output_dir, min_prefix_length=min_prefix_length, max_prefix_length=max_prefix_length_test, feat_strategy=feat_strategy)
+                                           output_dir=settings.output_dir, min_prefix_length=min_prefix_length, max_prefix_length=max_prefix_length_test, feat_strategy=feat_strategy ,dt_input_trainval=dt_input_trainval)
             feat_strategy_paths_dict[feat_strategy] = tmp_paths
 
             # discovering on val set with best hyperparams_evaluation setting
@@ -149,8 +151,8 @@ def rec_sys_exp(dataset_name):
                                                                                           paths=tmp_paths,
                                                                                           hyperparams_evaluation=hyperparams_evaluation,
                                                                                           eval_res=eval_res,
-                                                                                          thresholds=thresholds,
-                                                                                          nodes=nodes)
+                                                                                          dt_input_trainval=dt_input_trainval
+                                                                                          )
                     if settings.cumulative_res is True:
                         eval_res = copy.deepcopy(evaluation)
                     res_val_list.append(eval_res.fscore)

@@ -42,7 +42,7 @@ TRACE_TO_DF = {
     # EncodingType.DECLARE.value : declare_features
 }
 
-def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, support_threshold_dict, render_dt, num_feat_strategy):
+def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, support_threshold_dict, render_dt, num_feat_strategy, dt_input_trainval):
     print("DT params optimization ...")
     categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
     model_dict = {'dataset_name': dataset_name, 'parameters': (),
@@ -93,12 +93,11 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-    dt_input_trainval = Encoding(data, labeling=labeling)
     dt_input_trainval = dt_input_trainval.encode_traces()
 
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
-    print(X_train)
+    #print(X_train)
 
     X_train = X_train.astype(str)
     one_hot_data = pd.get_dummies(X_train[['prefix_1', 'prefix_2', 'prefix_3']] , drop_first=True)
@@ -200,19 +199,6 @@ def generate_paths(dtc, dt_input_features, target_label):
         leaf_ids_positive = filter(
             lambda leaf_id: dtc.tree_.value[leaf_id][0][0] > dtc.tree_.value[leaf_id][0][1], leaf_ids)
 
-    thresholds = []
-    nodes = []
-    for node in range(dtc.tree_.node_count):
-        if node in left or node in right or node==0:
-            threshold = dtc.tree_.threshold[node]
-            if(threshold > 0):
-                nodes.append(node)
-                thresholds.append(round(threshold, 3)) 
-                #print("Node:", node, "Threshold:", round(threshold, 3))
-
-    #print("Nodes: ", nodes)
-    #print("Thresolds: ", thresholds)
-
     def recurse(left, right, child, lineage=None):
         if lineage is None:
             lineage = []
@@ -257,4 +243,4 @@ def generate_paths(dtc, dt_input_features, target_label):
         )
         paths.append(path)
         
-    return paths, thresholds, nodes
+    return paths

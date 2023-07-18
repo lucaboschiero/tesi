@@ -211,7 +211,7 @@ def test_dt(test_log, train_log, labeling, prefixing, support_threshold, checker
 
 
 def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling, support_threshold, checkers, rules,
-                           dataset_name, constr_family, output_dir, min_prefix_length, max_prefix_length, feat_strategy):
+                           dataset_name, constr_family, output_dir, min_prefix_length, max_prefix_length, feat_strategy , dt_input_trainval):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
@@ -224,7 +224,7 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
     print("Generating decision tree with params optimization ...")
     if settings.optmize_dt:
         best_model_dict, feature_names = find_best_dt(dataset_name, constr_family, train_val_log, checkers, rules,
-                                                      labeling, support_threshold, settings.print_dt, feat_strategy)
+                                                      labeling, support_threshold, settings.print_dt, feat_strategy, dt_input_trainval)
     else:
         param_opt = ParamsOptimizer(data_log, train_val_log, val_log, train_log, settings.hyperparameters, labeling,
                                     checkers, rules, min_prefix_length, max_prefix_length)
@@ -236,9 +236,9 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
         w.writerow(row[:-1]) # do not print the model
 
     print("Generating decision tree paths ...")
-    paths, thresholds, nodes = generate_paths(dtc=best_model_dict['model'], dt_input_features=feature_names,
+    paths = generate_paths(dtc=best_model_dict['model'], dt_input_features=feature_names,
                            target_label=target_label)
-    return paths, thresholds, nodes
+    return paths
 
 
 def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
@@ -315,13 +315,11 @@ def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
     return eval_res
 
 
-def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, thresholds, nodes, eval_res=None, debug=False):
+def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, dt_input_trainval, eval_res=None, debug=False):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
     target_label = labeling["target"]
-
-    dt_input_trainval = Encoding(train_log, labeling=labeling)
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
@@ -342,7 +340,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
-                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, thresholds, nodes, dt_input_trainval)
+                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, dt_input_trainval)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
 
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)

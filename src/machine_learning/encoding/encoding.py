@@ -19,7 +19,21 @@ TRACE_TO_DF = {
 }
 
 class Encoding: 
-    def __init__(self, log: DataFrame = None, labeling= None):
+    def __init__(self, log: DataFrame = None):
+
+        case_counts = {}
+        #print(log)
+        # Iterare attraverso le tracce e contare il numero di tracce per ogni caso
+        for trace in log:
+            case_id = trace.attributes['concept:name']
+            for idx, event in enumerate(trace):
+                if case_id in case_counts:
+                    case_counts[case_id] += 1
+                else:
+                    case_counts[case_id] = 1
+            
+        prefix = max(case_counts.values())
+
         self.CONF = {  # This contains the configuration for the run
         'data': log,
         'prefix_length_strategy': 'fixed',
@@ -66,8 +80,21 @@ class Encoding:
         #print("Labels: ",labels)
         return DTInput(features, encoded_data, labels)
     
-    def decode_traces(self, log):
-        df_input = pd.DataFrame({'prefix_1': [log[0]], 'prefix_2': [log[1]], 'prefix_3': [log[2]]})
+    def decode(self, log):
+        prefix_columns = {}
+        for i, prefix in enumerate(log):
+            column_name = f'prefix_{i+1}'
+            prefix_columns[column_name] = [prefix]
+        df_input = pd.DataFrame(prefix_columns)
         self.encoder.decode(df=df_input)
+        return df_input
+    
+    def encode(self, log):
+        prefix_columns = {}
+        for i, prefix in enumerate(log):
+            column_name = f'prefix_{i+1}'
+            prefix_columns[column_name] = [prefix]
+        df_input = pd.DataFrame(prefix_columns)
+        self.encoder.encode(df=df_input)
         return df_input
         
