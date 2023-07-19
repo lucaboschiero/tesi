@@ -100,18 +100,13 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     #print(X_train)
 
     X_train = X_train.astype(str)
-    one_hot_data = pd.get_dummies(X_train[['prefix_1', 'prefix_2', 'prefix_3']] , drop_first=True)
-    #print(one_hot_data.columns)
-    
-    """
-    if num_feat_strategy == 'sqrt':
-        num_feat = int(math.sqrt(len(dt_input_trainval.features)))
-    else:
-        num_feat = int(num_feat_strategy * len(dt_input_trainval.features))
-    """
-    num_feat = len(dt_input_trainval.features) -1
-    sel = SelectKBest(mutual_info_classif, k=num_feat)
-    X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
+    prefix_columns = [col for col in X_train.columns if col.startswith('prefix_')]
+    one_hot_data = pd.get_dummies(X_train[prefix_columns], drop_first=True)
+    print(one_hot_data.columns)
+
+    #num_feat = len(dt_input_trainval.features) -1
+    #sel = SelectKBest(mutual_info_classif, k=num_feat)
+    #X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
     #new_feature_names = np.array(dt_input_trainval.features)[1:4]
     new_feature_names = np.array(one_hot_data.columns)
     #print(new_feature_names)

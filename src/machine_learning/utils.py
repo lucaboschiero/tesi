@@ -44,7 +44,7 @@ def matthews_corrcoef(tp, fp, fn, tn):
 
 def calcScore(path, pos_paths_total_samples_, weights):
     purity = 1 - path.impurity
-    pos_probabiity = path.num_samples['positive']/pos_paths_total_samples_
+    pos_probability = path.num_samples['positive']/pos_paths_total_samples_
     w = np.array([0.8, 0.1, 0.1])
     w = np.array([0.0, 0, 0])
     #pdb.set_trace()
@@ -52,7 +52,7 @@ def calcScore(path, pos_paths_total_samples_, weights):
     if path.num_samples['node_samples'] > 2:
         w = weights
     #pdb.set_trace()
-    return np.mean(w*np.array([path.fitness, purity, pos_probabiity]))
+    return np.mean(w*np.array([path.fitness, purity, pos_probability]))
     # return path.fitness*1#pos_probabiity
 
 
@@ -82,18 +82,17 @@ def calcPathFitnessOnPrefixGOOD(prefix, path, rules, fitness_type):
     return fitness
 
 
-def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, dt_input_trainval):
-    path_weights = []
-    path_activated_rules = np.zeros(len(path.rules))
-    fitness = None
+def calcPathFitnessOnPrefix(prefix, path,  dt_input_trainval):
 
     prefixes=[]
     for trace in prefix:
         prefixes.append(trace['concept:name'])
-    print(prefixes)
+    #print(prefixes)
+
+    num_prefixes = len(prefixes)
 
     prefixes = dt_input_trainval.encode(prefixes)
-    print(prefixes)
+    #print(prefixes)
 
     hyp = []
     for column in prefixes.columns:
@@ -108,6 +107,8 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, dt_input_trainval
         feature, state, parent = rule
         if parent != 0:
             parent = parent - 1
+        if (int(feature[-3]) - 1) >= num_prefixes: 
+            break
         if state == TraceState.VIOLATED:
             if isinstance(ref[int(feature[-3]) - 1], list):
                 ref[int(feature[-3]) - 1].append(-int(feature[-1]))
@@ -115,59 +116,9 @@ def calcPathFitnessOnPrefix(prefix, path, rules, fitness_type, dt_input_trainval
                 ref[int(feature[-3]) - 1] = [-int(feature[-1])]
         else:
             ref[int(feature[-3]) - 1] = int(feature[-1])
-        print("ref:", ref)
+        #print("ref:", ref)
 
-    fitnessEditDistance.edit(ref, hyp)
-        #out = dt_input_trainval.decode_traces(ref)
-        #print(out)
-    """
-        if(thresholds[parent] >=2):
-            for i in math.floor(thresholds[parent]):
-                vector = []
-                vectors[counter] = vector
-                counter = counter+1
-        """
-
-    print("----------")
-
-    fitness = 1
-
-    """
-    for rule_idx, rule in enumerate(path.rules):
-        template, rule_state, _ = rule
-        #template_name, template_params = parse_method(template)
-        result = None
-        if settings.use_score:
-            if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-                result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], rules)
-            else:
-                result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], template_params[1], rules)
-
-            if rule_state == TraceState.VIOLATED and result.state == TraceState.POSSIBLY_VIOLATED:
-                path_activated_rules[rule_idx] = 1
-            elif rule_state == TraceState.SATISFIED and result.state == TraceState.POSSIBLY_VIOLATED:
-                path_activated_rules[rule_idx] = 0.5
-            elif rule_state == TraceState.VIOLATED and result.state == TraceState.POSSIBLY_SATISFIED:
-                path_activated_rules[rule_idx] = 0.5
-            elif rule_state == TraceState.SATISFIED and result.state == TraceState.POSSIBLY_SATISFIED:
-                path_activated_rules[rule_idx] = 1
-        else:
-            if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-                result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, True, template_params[0], rules)
-            else:
-                result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, True, template_params[0], template_params[1], rules)
-
-        if rule_state == result.state:
-            path_activated_rules[rule_idx] = 1
-        path_weights.append(1/(rule_idx+1))
-
-    if fitness_type == 'mean':
-        fitness = np.mean(path_activated_rules)
-    elif fitness_type == 'wmean':
-        fitness = np.sum(path_weights*path_activated_rules)/np.sum(path_weights)
- """
-
-    return fitness
+    return fitnessEditDistance.edit(ref, hyp)
 
 
 def generate_prefixes(log, prefixing):

@@ -104,38 +104,38 @@ class ParamsOptimizer:
         del best_model_dict["frequent_pairs"]
         return best_model_dict, dt_input_trainval.features
 
-def recommend(prefix, path, rules):
+def recommend(prefix, path, dt_input_trainval):
+
     recommendation = ""
+
+    prefixes=[]
+    for trace in prefix:
+        prefixes.append(trace['concept:name'])
+    num_prefixes = len(prefixes)
+    #print(prefixes)
+
+
     for rule in path.rules:
-        template, rule_state, _ = rule
-        template_name, template_params = parse_method(template)
+        feature, state, parent = rule
+        #print(feature)
+        if parent != 0:
+            parent = parent - 1
+        n_prefix = int(feature[-3])
+        if (n_prefix) > num_prefixes: 
+            rec = np.zeros(n_prefix, dtype=int)
+            rec[n_prefix -1 ] = int(feature[-1])
+            rec = rec.tolist()
+            rec_str = dt_input_trainval.decode(rec)
 
-        result = None
-        if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], rules)
-        else:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], template_params[1], rules)
+            for column in rec_str.columns:
+                if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
+                    if state == TraceState.VIOLATED:
+                        print(column, "should not be", rec_str[column].iloc[0])
+                        recommendation += column, "should not be", rec_str[column].iloc[0]
+                    if state == TraceState.SATISFIED:
+                        print(column, "should be", rec_str[column].iloc[0])
+                        recommendation += column, "should be", rec_str[column].iloc[0]
 
-        if rule_state == TraceState.SATISFIED:
-            if result.state == TraceState.VIOLATED:
-                recommendation = "Contradiction"
-                break
-            elif result.state == TraceState.SATISFIED:
-                pass
-            elif result.state == TraceState.POSSIBLY_VIOLATED:
-                recommendation += template + " should be SATISFIED. "
-            elif result.state == TraceState.POSSIBLY_SATISFIED:
-                recommendation += template + " should not be VIOLATED. "
-        elif rule_state == TraceState.VIOLATED:
-            if result.state == TraceState.VIOLATED:
-                pass
-            elif result.state == TraceState.SATISFIED:
-                recommendation = "Contradiction"
-                break
-            elif result.state == TraceState.POSSIBLY_VIOLATED:
-                recommendation += template + " should not be SATISFIED. "
-            elif result.state == TraceState.POSSIBLY_SATISFIED:
-                recommendation += template + " should be VIOLATED. "
     return recommendation
 
 def evaluate(trace, path, rules, labeling, sat_threshold, eval_type='strong'):
@@ -340,7 +340,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
-                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type, dt_input_trainval)
+                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, dt_input_trainval)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
 
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
@@ -350,11 +350,11 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                 paths = sorted(paths, key=lambda path: (- path.fitness), reverse=False)
 
             reranked_paths = copy.deepcopy(paths)
-            if settings.reranking:
+            if settings.reranking: # è false
                 reranked_paths = paths[:settings.top_K_paths]
                 reranked_paths = sorted(reranked_paths, key=lambda path: (- path.score), reverse=False)
 
-            if settings.compute_gain and len(reranked_paths) > 0:
+            if settings.compute_gain and len(reranked_paths) > 0: #è false
                 raw_prefix = [event['concept:name'] for event in prefix.events]
                 trace = test_log[prefix.trace_num]
                 path = reranked_paths[0]
@@ -367,12 +367,11 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
 
             selected_path = None
             for path_index, path in enumerate(reranked_paths):
-
                 if selected_path and (path.fitness != selected_path.fitness or path.impurity != selected_path.impurity
                                       or path.num_samples != selected_path.num_samples):
                     break
 
-                recommendation = recommend(prefix.events, path, rules)
+                recommendation = recommend(prefix.events, path, dt_input_trainval)
                 # print(f"{prefix_length} {prefix.trace_num} {prefix.trace_id} {path_index}->{recommendation}")
 
                 if recommendation != "Contradiction" and recommendation != "":

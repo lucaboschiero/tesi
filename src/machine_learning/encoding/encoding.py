@@ -32,12 +32,13 @@ class Encoding:
                 else:
                     case_counts[case_id] = 1
             
-        prefix = max(case_counts.values())
+        #prefix = max(case_counts.values())
+        self.prefix = 6
 
         self.CONF = {  # This contains the configuration for the run
         'data': log,
         'prefix_length_strategy': 'fixed',
-        'prefix_length': 3,
+        'prefix_length': self.prefix,
         'padding': True,  # TODO: why use of padding?
         'feature_selection': 'simple',
         'task_generation_type': 'all_in_one',
@@ -67,10 +68,10 @@ class Encoding:
         features = []
         encoded_data = []
         labels = []
-        column_names = list(self.df.columns[0:4])
+        column_names = list(self.df.columns[0:self.prefix+1])
         for index, row in self.df.iterrows():  
             labels.append(row['label'] -1)
-            encoded_data.append(list(row[0:4]))  
+            encoded_data.append(list(row[0:self.prefix+1]))  
         if not features:
             features = list(column_names)
             
