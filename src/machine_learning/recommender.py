@@ -130,11 +130,11 @@ def recommend(prefix, path, dt_input_trainval):
             for column in rec_str.columns:
                 if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
                     if state == TraceState.VIOLATED:
-                        print(column, "should not be", rec_str[column].iloc[0])
-                        recommendation += column, "should not be", rec_str[column].iloc[0]
+                        #print(column, "should not be", rec_str[column].iloc[0])
+                        recommendation += ""+ column + " should not be " + rec_str[column].iloc[0]
                     if state == TraceState.SATISFIED:
-                        print(column, "should be", rec_str[column].iloc[0])
-                        recommendation += column, "should be", rec_str[column].iloc[0]
+                        #print(column, "should be", rec_str[column].iloc[0])
+                        recommendation += "" + column+  " should be " + rec_str[column].iloc[0]
 
     return recommendation
 
@@ -372,6 +372,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     break
 
                 recommendation = recommend(prefix.events, path, dt_input_trainval)
+                print(recommendation)
                 # print(f"{prefix_length} {prefix.trace_num} {prefix.trace_id} {path_index}->{recommendation}")
 
                 if recommendation != "Contradiction" and recommendation != "":
