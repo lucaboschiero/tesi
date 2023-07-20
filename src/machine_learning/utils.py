@@ -24,7 +24,7 @@ from sklearn.feature_selection import chi2, mutual_info_classif
 import pdb
 import settings
 import math
-
+import re
 
 def gain(c, nc, pc, pnc):
     prob_pos_comp = (pc + settings.smooth_factor) / (c + settings.smooth_factor * settings.num_classes)
@@ -82,6 +82,18 @@ def calcPathFitnessOnPrefixGOOD(prefix, path, rules, fitness_type):
     return fitness
 
 
+def extract_numbers_from_string(input_string):
+    pattern = r"prefix_(\d+)_(\d+)"
+
+    matches = re.findall(pattern, input_string)
+
+    if matches:
+        numbers = [(int(match[0]), int(match[1])) for match in matches]
+        return numbers
+    else:
+        return None
+
+
 def calcPathFitnessOnPrefix(prefix, path,  dt_input_trainval):
 
     prefixes=[]
@@ -99,25 +111,35 @@ def calcPathFitnessOnPrefix(prefix, path,  dt_input_trainval):
         hyp.extend(prefixes[column].values)
     hyp = np.array(hyp)
     hyp = hyp.tolist()
+    #print(hyp)
 
-
-    ref = ["", "", ""]
+    rec = np.zeros(len(hyp), dtype=int)
+    ref = rec.tolist()
     
     for rule in path.rules:
         feature, state, parent = rule
-        if parent != 0:
-            parent = parent - 1
-        if (int(feature[-3]) - 1) >= num_prefixes: 
-            break
-        if state == TraceState.VIOLATED:
-            if isinstance(ref[int(feature[-3]) - 1], list):
-                ref[int(feature[-3]) - 1].append(-int(feature[-1]))
-            else:
-                ref[int(feature[-3]) - 1] = [-int(feature[-1])]
-        else:
-            ref[int(feature[-3]) - 1] = int(feature[-1])
-        #print("ref:", ref)
+        print(feature)
+        #print(state)
+        #print(parent)
 
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+
+        if num1 >= num_prefixes: 
+            continue
+        
+        if state == TraceState.VIOLATED:
+            if isinstance(ref[num1 - 1], list):
+                ref[num1 - 1].append(-num2)
+            else:
+                ref[num1 - 1] = [-num2]
+        else:
+            ref[num1 - 1] = int(num2)
+        #print(ref)
+
+    #print(fitnessEditDistance.edit(ref, hyp))
     return fitnessEditDistance.edit(ref, hyp)
 
 

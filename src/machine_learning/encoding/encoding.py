@@ -32,8 +32,8 @@ class Encoding:
                 else:
                     case_counts[case_id] = 1
             
-        #prefix = max(case_counts.values())
-        self.prefix = 6
+        self.prefix = max(case_counts.values())
+        #self.prefix = 15
 
         self.CONF = {  # This contains the configuration for the run
         'data': log,

@@ -104,6 +104,7 @@ class ParamsOptimizer:
         del best_model_dict["frequent_pairs"]
         return best_model_dict, dt_input_trainval.features
 
+
 def recommend(prefix, path, dt_input_trainval):
 
     recommendation = ""
@@ -112,38 +113,70 @@ def recommend(prefix, path, dt_input_trainval):
     for trace in prefix:
         prefixes.append(trace['concept:name'])
     num_prefixes = len(prefixes)
-    #print(prefixes)
 
 
     for rule in path.rules:
         feature, state, parent = rule
-        #print(feature)
         if parent != 0:
             parent = parent - 1
-        n_prefix = int(feature[-3])
-        if (n_prefix) > num_prefixes: 
-            rec = np.zeros(n_prefix, dtype=int)
-            rec[n_prefix -1 ] = int(feature[-1])
+
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+
+        #print(feature)
+        #print(n_prefix)
+        if (num1) > num_prefixes: 
+            rec = np.zeros(num1, dtype=int)
+            rec[num1 -1 ] = int(num2)
             rec = rec.tolist()
+            #print(rec)
             rec_str = dt_input_trainval.decode(rec)
 
             for column in rec_str.columns:
                 if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
                     if state == TraceState.VIOLATED:
-                        #print(column, "should not be", rec_str[column].iloc[0])
-                        recommendation += ""+ column + " should not be " + rec_str[column].iloc[0]
+                        print(column, "should not be", rec_str[column].iloc[0])
+                        recommendation += ""+ column + " should not be " + rec_str[column].iloc[0] + "; "
                     if state == TraceState.SATISFIED:
-                        #print(column, "should be", rec_str[column].iloc[0])
-                        recommendation += "" + column+  " should be " + rec_str[column].iloc[0]
+                        print(column, "should be", rec_str[column].iloc[0])
+                        recommendation += "" + column+  " should be " + rec_str[column].iloc[0] + "; "
 
     return recommendation
 
-def evaluate(trace, path, rules, labeling, sat_threshold, eval_type='strong'):
+def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold):
     # Compliantness con different strategies
     is_compliant = True
     rule_occurencies = 0
     rule_activations = []
+
+    activities = []
+    for idx, event in enumerate(trace):
+        for attribute_key, attribute_value in event.items():
+            if (attribute_key == 'concept:name'):
+                activities.append(attribute_value)
+    #print(activities)
+    activities = activities[num_prefixes:]
+    print(activities)
+    trace_length = len(activities)
+
+    ref = np.zeros(trace_length, dtype=int)
+
     for rule in path.rules:
+        feature, state, parent = rule
+
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+        if (num1) > num_prefixes: 
+            ref[num1 -1 ] = int(num2)
+
+    print(ref)
+
+
+    """
         template, rule_state, _ = rule
         template_name, template_params = parse_method(template)
 
@@ -195,6 +228,8 @@ def evaluate(trace, path, rules, labeling, sat_threshold, eval_type='strong'):
             cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
         else:
             cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
+    """
+    cm= 'sium'
     return is_compliant, cm
 
 
@@ -382,8 +417,8 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     selected_path = path
                     trace = test_log[prefix.trace_num]
                     #print(prefix.trace_id, trace[0]['label'])
-                    is_compliant, e = evaluate(trace, path, rules, labeling, sat_threshold=hyperparams_evaluation[0],
-                                               eval_type=settings.sat_type)
+                    is_compliant, e = evaluate(trace, path, prefixing['length'],  dt_input_trainval, sat_threshold=hyperparams_evaluation[0],
+                                               )
                     #if prefix_length == 12 or prefix_length == 12:
                         #pdb.set_trace()
                     #pdb.set_trace()

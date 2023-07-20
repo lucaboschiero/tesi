@@ -21,7 +21,7 @@ def edit(ref, hyp):
     maxi = max(len(ref2),len(hyp2))
 
     for i in range(len(ref)-1,-1,-1):
-        if ref2[i] == "":
+        if ref2[i] == "" or ref2[i] == 0:
             ref2.pop(i)
             hyp2.pop(i)
 
