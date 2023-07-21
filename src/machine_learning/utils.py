@@ -118,7 +118,7 @@ def calcPathFitnessOnPrefix(prefix, path,  dt_input_trainval):
     
     for rule in path.rules:
         feature, state, parent = rule
-        print(feature)
+        #print(feature)
         #print(state)
         #print(parent)
 

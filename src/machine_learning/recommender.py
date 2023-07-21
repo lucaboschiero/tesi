@@ -5,6 +5,7 @@ import copy
 from src.machine_learning.decision_tree import *
 from src.models import EvaluationResult
 from src.constants import *
+from src.machine_learning import evaluateEditDistance
 import csv
 import numpy as np
 import settings
@@ -145,11 +146,10 @@ def recommend(prefix, path, dt_input_trainval):
 
     return recommendation
 
-def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold):
+def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeling):
     # Compliantness con different strategies
     is_compliant = True
-    rule_occurencies = 0
-    rule_activations = []
+    sat_threshold = 1 # thresold da cambiare
 
     activities = []
     for idx, event in enumerate(trace):
@@ -157,9 +157,20 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold):
             if (attribute_key == 'concept:name'):
                 activities.append(attribute_value)
     #print(activities)
-    activities = activities[num_prefixes:]
-    print(activities)
     trace_length = len(activities)
+    #print(trace_length)
+    activities = dt_input_trainval.encode(activities)
+    #print(activities)
+
+    hyp = []
+    for column in activities.columns:
+        hyp.extend(activities[column].values)
+    hyp = np.array(hyp)
+    hyp = hyp.tolist()
+    #print(hyp)
+    hyp = hyp[num_prefixes:]
+    #print(hyp)
+
 
     ref = np.zeros(trace_length, dtype=int)
 
@@ -173,63 +184,25 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold):
         if (num1) > num_prefixes: 
             ref[num1 -1 ] = int(num2)
 
-    print(ref)
+    ref = ref[num_prefixes:]
+    ref = ref.tolist()
+    #print(ref)
+
+    ed = evaluateEditDistance.edit(ref, hyp)
 
 
-    """
-        template, rule_state, _ = rule
-        template_name, template_params = parse_method(template)
+    if(ed < sat_threshold):
+        is_compliant = True
+    else: 
+        is_compliant = False
 
-        result = None
-        if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], rules)
-        else:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], template_params[1], rules)
+    label = generate_label(trace , labeling)
 
-        if eval_type == 'count_activations':
-            # Existence templates
-            if result.num_fulfillments is None:
-                if rule_state == result.state:
-                    rule_activations.append(1)
-                else:
-                    rule_activations.append(0)
-            # Other templates
-            else:
-                if result.num_activations > 0:
-                    rule_activations.append(result.num_fulfillments/result.num_activations)
-                else:
-                    rule_activations.append(1)
-
-        elif eval_type == 'count_occurrences':
-            if rule_state == result.state:
-                rule_occurencies += 1
-        else:
-            if rule_state != result.state:
-                is_compliant = False
-                break
-
-    if eval_type == 'count_activations':
-        is_compliant = True if np.mean(rule_activations) > sat_threshold else False
-    elif eval_type == 'count_occurrences':
-        is_compliant = True if rule_occurencies / len(path.rules) > sat_threshold else False
-
-    label = generate_label(trace, labeling)
-
-    if labeling["target"] == TraceLabel.TRUE:
-        if is_compliant:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
-            # print(f"1,{label},{cm}")
-        else:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-            # print(f"0,{label},{cm}")
+    if is_compliant:
+        cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
     else:
-        print("---------------------")
-        if is_compliant:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-        else:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
-    """
-    cm= 'sium'
+        cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
+
     return is_compliant, cm
 
 
@@ -417,8 +390,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     selected_path = path
                     trace = test_log[prefix.trace_num]
                     #print(prefix.trace_id, trace[0]['label'])
-                    is_compliant, e = evaluate(trace, path, prefixing['length'],  dt_input_trainval, sat_threshold=hyperparams_evaluation[0],
-                                               )
+                    is_compliant, e = evaluate(trace, path, prefixing['length'],  dt_input_trainval, labeling=labeling, sat_threshold=hyperparams_evaluation[0])
                     #if prefix_length == 12 or prefix_length == 12:
                         #pdb.set_trace()
                     #pdb.set_trace()
