@@ -17,6 +17,7 @@ def calc_mean_label_threshold(log, labeling):
 
 
 def generate_label(trace, labeling):
+    #print(trace[0])
     if labeling["type"] == LabelType.DEFAULT:
         if trace.attributes["label"] == "true":
             return TraceLabel.TRUE

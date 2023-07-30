@@ -31,9 +31,19 @@ class Encoding:
                     case_counts[case_id] += 1
                 else:
                     case_counts[case_id] = 1
-            
-        self.prefix = max(case_counts.values())
-        #self.prefix = 15
+        
+
+        total_cases = len(case_counts)
+        total_counts = sum(case_counts.values())
+
+        # Calcola la media
+        if total_cases > 0:
+            average = total_counts / total_cases
+        else:
+            average = 0
+
+        #self.prefix = max(case_counts.values())
+        self.prefix = int(average)
 
         self.CONF = {  # This contains the configuration for the run
         'data': log,

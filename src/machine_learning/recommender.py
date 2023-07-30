@@ -138,10 +138,10 @@ def recommend(prefix, path, dt_input_trainval):
             for column in rec_str.columns:
                 if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
                     if state == TraceState.VIOLATED:
-                        print(column, "should not be", rec_str[column].iloc[0])
+                        #print(column, "should not be", rec_str[column].iloc[0])
                         recommendation += ""+ column + " should not be " + rec_str[column].iloc[0] + "; "
                     if state == TraceState.SATISFIED:
-                        print(column, "should be", rec_str[column].iloc[0])
+                        #print(column, "should be", rec_str[column].iloc[0])
                         recommendation += "" + column+  " should be " + rec_str[column].iloc[0] + "; "
 
     return recommendation
@@ -171,6 +171,7 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
     hyp = hyp[num_prefixes:]
     #print(hyp)
 
+    counter = 0
 
     ref = np.zeros(trace_length, dtype=int)
 
@@ -182,13 +183,18 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
             num1 = n1
             num2 = n2
         if (num1) > num_prefixes: 
-            ref[num1 -1 ] = int(num2)
+            #print(trace_length)
+            if(num1 > trace_length):
+                counter = counter + 1
+            else: 
+                ref[num1 -1 ] = int(num2)
 
     ref = ref[num_prefixes:]
     ref = ref.tolist()
     #print(ref)
 
-    ed = evaluateEditDistance.edit(ref, hyp)
+    ed = evaluateEditDistance.edit(ref, hyp) + counter
+    #print(ed)
 
 
     if(ed < sat_threshold):
@@ -434,10 +440,14 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                         eval_res.fn += 1
                     elif e == ConfusionMatrix.TN:
                         eval_res.tn += 1
+                    
+                    prefixes=[]
+                    for n in prefix.events:
+                        prefixes.append(n['concept:name'])
 
                     recommendation_model = Recommendation(
                         trace_id=prefix.trace_id,
-                        prefix_len=len(prefix.events),
+                        prefix_len=len(prefixes),
                         complete_trace=generate_prefix_path(test_log[prefix.trace_num]),
                         current_prefix=generate_prefix_path(prefix.events),
                         actual_label=generate_label(trace, labeling).name,
