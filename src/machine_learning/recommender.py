@@ -118,8 +118,6 @@ def recommend(prefix, path, dt_input_trainval):
 
     for rule in path.rules:
         feature, state, parent = rule
-        if parent != 0:
-            parent = parent - 1
 
         numbers = extract_numbers_from_string(feature)
         for n1, n2 in numbers: 
@@ -149,7 +147,7 @@ def recommend(prefix, path, dt_input_trainval):
 def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeling):
     # Compliantness con different strategies
     is_compliant = True
-    sat_threshold = 1 # thresold da cambiare
+    #sat_threshold = 1 # thresold da cambiare
 
     activities = []
     for idx, event in enumerate(trace):
@@ -157,8 +155,6 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
             if (attribute_key == 'concept:name'):
                 activities.append(attribute_value)
     #print(activities)
-    trace_length = len(activities)
-    #print(trace_length)
     activities = dt_input_trainval.encode(activities)
     #print(activities)
 
@@ -171,9 +167,17 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
     hyp = hyp[num_prefixes:]
     #print(hyp)
 
-    counter = 0
+    n_max = 0
 
-    ref = np.zeros(trace_length, dtype=int)
+    for rule in path.rules:
+        feature, state, parent = rule
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+        if(num1 > n_max):
+            n_max = num1
+    ref = np.zeros(n_max, dtype=int)
 
     for rule in path.rules:
         feature, state, parent = rule
@@ -183,17 +187,13 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
             num1 = n1
             num2 = n2
         if (num1) > num_prefixes: 
-            #print(trace_length)
-            if(num1 > trace_length):
-                counter = counter + 1
-            else: 
                 ref[num1 -1 ] = int(num2)
 
     ref = ref[num_prefixes:]
     ref = ref.tolist()
     #print(ref)
 
-    ed = evaluateEditDistance.edit(ref, hyp) + counter
+    ed = evaluateEditDistance.edit(ref, hyp)
     #print(ed)
 
 

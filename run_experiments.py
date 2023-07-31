@@ -140,8 +140,8 @@ def rec_sys_exp(dataset_name):
                 for pref_id, prefix_len in enumerate(prefix_lenght_list_val):
                     prefixing = {
                         "type": PrefixType.ONLY,
-                        #"length": prefix_len
-                        "length": 4
+                        "length": prefix_len
+                        #"length": 4
                     }
                     recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
                                                                                           train_log=train_log,
