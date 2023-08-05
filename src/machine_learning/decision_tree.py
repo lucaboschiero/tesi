@@ -42,7 +42,7 @@ TRACE_TO_DF = {
     # EncodingType.DECLARE.value : declare_features
 }
 
-def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, support_threshold_dict, render_dt, num_feat_strategy):
+def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input_trainval):
     print("DT params optimization ...")
     categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
     model_dict = {'dataset_name': dataset_name, 'parameters': (),
@@ -93,28 +93,27 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-    dt_input_trainval = encode_traces(data, labeling=labeling)
-
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
-    print(X_train)
-    """
-    if num_feat_strategy == 'sqrt':
-        num_feat = int(math.sqrt(len(dt_input_trainval.features)))
-    else:
-        num_feat = int(num_feat_strategy * len(dt_input_trainval.features))
-    """
-    num_feat = len(dt_input_trainval.features) -1
-    sel = SelectKBest(mutual_info_classif, k=num_feat)
-    X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
-    #cols = sel.get_support(indices=True)
-    new_feature_names = np.array(dt_input_trainval.features)[1:4]
+    #print(X_train)
+
+    X_train = X_train.astype(str)
+    prefix_columns = [col for col in X_train.columns if col.startswith('prefix_')]
+    one_hot_data = pd.get_dummies(X_train[prefix_columns], drop_first=True)
+    #print(one_hot_data.columns)
+
+    #num_feat = len(dt_input_trainval.features) -1
+    #sel = SelectKBest(mutual_info_classif, k=num_feat)
+    #X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
+    #new_feature_names = np.array(dt_input_trainval.features)[1:4]
+    new_feature_names = np.array(one_hot_data.columns)
     #print(new_feature_names)
+    #print(y_train)
     #print(X_train)
 
     print("Grid search ...")
     search = GridSearchCV(estimator=DecisionTreeClassifier(random_state=0), param_grid=settings.dt_hyperparameters, scoring="f1", return_train_score=True, cv=5)
-    search.fit(X_train, y_train)
+    search.fit(one_hot_data, y_train)
     model_dict['model'] = search.best_estimator_
     f1_score_train = round(100*search.cv_results_['mean_train_score'][search.best_index_], 2)
     model_dict['f1_score_val'] = round(100*search.best_score_, 2)
@@ -184,6 +183,7 @@ def generate_paths(dtc, dt_input_features, target_label):
     left = dtc.tree_.children_left
     right = dtc.tree_.children_right
     features = [dt_input_features[i] for i in dtc.tree_.feature]
+
     leaf_ids = np.argwhere(left == -1)[:, 0]
     if target_label == TraceLabel.TRUE:
         leaf_ids_positive = filter(
@@ -203,7 +203,7 @@ def generate_paths(dtc, dt_input_features, target_label):
             parent = np.where(right == child)[0].item()
             state = TraceState.SATISFIED
 
-        lineage.append((features[parent], state, parent))
+        lineage.append((features[parent],state, parent))
 
         if parent == 0:
             lineage.reverse()
@@ -236,4 +236,5 @@ def generate_paths(dtc, dt_input_features, target_label):
             rules=rules
         )
         paths.append(path)
+        
     return paths

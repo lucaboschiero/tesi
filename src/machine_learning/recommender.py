@@ -5,6 +5,7 @@ import copy
 from src.machine_learning.decision_tree import *
 from src.models import EvaluationResult
 from src.constants import *
+from src.machine_learning import evaluateEditDistance
 import csv
 import numpy as np
 import settings
@@ -39,12 +40,10 @@ class ParamsOptimizer:
                                                                                                param_tuple[0])
 
             # Generating decision tree input
-            dt_input_train = encode_traces(self.train_log, frequent_events=frequent_events_train,
-                                           frequent_pairs=frequent_pairs_train, checkers=self.checkers,
-                                           rules=self.rules, labeling=self.labeling)
-            dt_input_val = encode_traces(self.val_log, frequent_events=frequent_events_train,
-                                         frequent_pairs=frequent_pairs_train, checkers=self.checkers,
-                                         rules=self.rules, labeling=self.labeling)
+            dt_input_train = Encoding(self.train_log, labeling=self.labeling)
+            dt_input_train.encode_traces
+            dt_input_val = Encoding(self.val_log, labeling=self.labeling)
+            dt_input_val.encode_traces
 
             X_train = pd.DataFrame(dt_input_train.encoded_data, columns=dt_input_train.features)
             y_train = pd.Categorical(dt_input_train.labels, categories=categories)
@@ -86,12 +85,10 @@ class ParamsOptimizer:
 
         # (frequent_events_trainval, frequent_pairs_trainval) = generate_frequent_events_and_pairs(self.train_val_log,
         #                                                                                   best_model_dict['parameters'][0])
-        dt_input_trainval = encode_traces(self.train_val_log, frequent_events=best_model_dict['frequent_events'],
-                                          frequent_pairs=best_model_dict['frequent_pairs'], checkers=self.checkers,
-                                          rules=self.rules, labeling=self.labeling)
-        dt_input_val = encode_traces(self.val_log, frequent_events=best_model_dict['frequent_events'],
-                                     frequent_pairs=best_model_dict['frequent_pairs'], checkers=self.checkers,
-                                     rules=self.rules, labeling=self.labeling)
+        dt_input_trainval = Encoding(self.train_val_log, labeling=self.labeling)
+        dt_input_trainval.encode_traces
+        dt_input_val = Encoding(self.val_log, labeling=self.labeling)
+        dt_input_val.encode_traces
 
         X_train_val = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
         y_train_val = pd.Categorical(dt_input_trainval.labels, categories=categories)
@@ -108,97 +105,110 @@ class ParamsOptimizer:
         del best_model_dict["frequent_pairs"]
         return best_model_dict, dt_input_trainval.features
 
-def recommend(prefix, path, rules):
+
+def recommend(prefix, path, dt_input_trainval):
+
     recommendation = ""
+
+    prefixes=[]
+    for trace in prefix:
+        prefixes.append(trace['concept:name'])
+    num_prefixes = len(prefixes)
+
+
     for rule in path.rules:
-        template, rule_state, _ = rule
-        template_name, template_params = parse_method(template)
+        feature, state, parent = rule
 
-        result = None
-        if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], rules)
-        else:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](prefix, False, template_params[0], template_params[1], rules)
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
 
-        if rule_state == TraceState.SATISFIED:
-            if result.state == TraceState.VIOLATED:
-                recommendation = "Contradiction"
-                break
-            elif result.state == TraceState.SATISFIED:
-                pass
-            elif result.state == TraceState.POSSIBLY_VIOLATED:
-                recommendation += template + " should be SATISFIED. "
-            elif result.state == TraceState.POSSIBLY_SATISFIED:
-                recommendation += template + " should not be VIOLATED. "
-        elif rule_state == TraceState.VIOLATED:
-            if result.state == TraceState.VIOLATED:
-                pass
-            elif result.state == TraceState.SATISFIED:
-                recommendation = "Contradiction"
-                break
-            elif result.state == TraceState.POSSIBLY_VIOLATED:
-                recommendation += template + " should not be SATISFIED. "
-            elif result.state == TraceState.POSSIBLY_SATISFIED:
-                recommendation += template + " should be VIOLATED. "
+        #print(feature)
+        #print(n_prefix)
+        if (num1) > num_prefixes: 
+            rec = np.zeros(num1, dtype=int)
+            rec[num1 -1 ] = int(num2)
+            rec = rec.tolist()
+            #print(rec)
+            rec_str = dt_input_trainval.decode(rec)
+
+            for column in rec_str.columns:
+                if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
+                    if state == TraceState.VIOLATED:
+                        #print(column, "should not be", rec_str[column].iloc[0])
+                        recommendation += ""+ column + " should not be " + rec_str[column].iloc[0] + "; "
+                    if state == TraceState.SATISFIED:
+                        #print(column, "should be", rec_str[column].iloc[0])
+                        recommendation += "" + column+  " should be " + rec_str[column].iloc[0] + "; "
+
     return recommendation
 
-def evaluate(trace, path, rules, labeling, sat_threshold, eval_type='strong'):
+def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeling):
     # Compliantness con different strategies
     is_compliant = True
-    rule_occurencies = 0
-    rule_activations = []
+    #sat_threshold = 1 # thresold da cambiare
+
+    activities = []
+    for idx, event in enumerate(trace):
+        for attribute_key, attribute_value in event.items():
+            if (attribute_key == 'concept:name'):
+                activities.append(attribute_value)
+    #print(activities)
+    activities = dt_input_trainval.encode(activities)
+    #print(activities)
+
+    hyp = []
+    for column in activities.columns:
+        hyp.extend(activities[column].values)
+    hyp = np.array(hyp)
+    hyp = hyp.tolist()
+    #print(hyp)
+    hyp = hyp[num_prefixes:]
+    #print(hyp)
+
+    n_max = 0
+
     for rule in path.rules:
-        template, rule_state, _ = rule
-        template_name, template_params = parse_method(template)
+        feature, state, parent = rule
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+        if(num1 > n_max):
+            n_max = num1
+    ref = np.zeros(n_max, dtype=int)
 
-        result = None
-        if template_name in [ConstraintChecker.EXISTENCE.value, ConstraintChecker.ABSENCE.value, ConstraintChecker.INIT.value, ConstraintChecker.EXACTLY.value]:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], rules)
-        else:
-            result = CONSTRAINT_CHECKER_FUNCTIONS[template_name](trace, True, template_params[0], template_params[1], rules)
+    for rule in path.rules:
+        feature, state, parent = rule
 
-        if eval_type == 'count_activations':
-            # Existence templates
-            if result.num_fulfillments is None:
-                if rule_state == result.state:
-                    rule_activations.append(1)
-                else:
-                    rule_activations.append(0)
-            # Other templates
-            else:
-                if result.num_activations > 0:
-                    rule_activations.append(result.num_fulfillments/result.num_activations)
-                else:
-                    rule_activations.append(1)
+        numbers = extract_numbers_from_string(feature)
+        for n1, n2 in numbers: 
+            num1 = n1
+            num2 = n2
+        if (num1) > num_prefixes: 
+                ref[num1 -1 ] = int(num2)
 
-        elif eval_type == 'count_occurrences':
-            if rule_state == result.state:
-                rule_occurencies += 1
-        else:
-            if rule_state != result.state:
-                is_compliant = False
-                break
+    ref = ref[num_prefixes:]
+    ref = ref.tolist()
+    #print(ref)
 
-    if eval_type == 'count_activations':
-        is_compliant = True if np.mean(rule_activations) > sat_threshold else False
-    elif eval_type == 'count_occurrences':
-        is_compliant = True if rule_occurencies / len(path.rules) > sat_threshold else False
+    ed = evaluateEditDistance.edit(ref, hyp)
+    #print(ed)
 
-    label = generate_label(trace, labeling)
 
-    if labeling["target"] == TraceLabel.TRUE:
-        if is_compliant:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
-            # print(f"1,{label},{cm}")
-        else:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-            # print(f"0,{label},{cm}")
+    if(ed < sat_threshold):
+        is_compliant = True
+    else: 
+        is_compliant = False
+
+    label = generate_label(trace , labeling)
+
+    if is_compliant:
+        cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
     else:
-        print("---------------------")
-        if is_compliant:
-            cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-        else:
-            cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
+        cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
+
     return is_compliant, cm
 
 
@@ -207,15 +217,15 @@ def test_dt(test_log, train_log, labeling, prefixing, support_threshold, checker
     (frequent_events, frequent_pairs) = generate_frequent_events_and_pairs(train_log, support_threshold)
 
     print("Generating decision tree input ...")
-    dt_input = encode_traces(train_log, frequent_events=frequent_events, frequent_pairs=frequent_pairs,
-                             checkers=checkers, rules=rules, labeling=labeling)
+    dt_input = Encoding(train_log, labeling)
+    dt_input.encode_traces
 
     print("Generating decision tree ...")
     return dt_score(dt_input=dt_input)
 
 
-def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling, support_threshold, checkers, rules,
-                           dataset_name, constr_family, output_dir, min_prefix_length, max_prefix_length, feat_strategy):
+def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling, support_threshold,
+                           dataset_name, output_dir, dt_input_trainval):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
@@ -227,12 +237,12 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
 
     print("Generating decision tree with params optimization ...")
     if settings.optmize_dt:
-        best_model_dict, feature_names = find_best_dt(dataset_name, constr_family, train_val_log, checkers, rules,
-                                                      labeling, support_threshold, settings.print_dt, feat_strategy)
-    else:
-        param_opt = ParamsOptimizer(data_log, train_val_log, val_log, train_log, settings.hyperparameters, labeling,
-                                    checkers, rules, min_prefix_length, max_prefix_length)
-        best_model_dict, feature_names = param_opt.params_grid_search(dataset_name, constr_family)
+        best_model_dict, feature_names = find_best_dt(dataset_name, train_val_log, 
+                                                      support_threshold, settings.print_dt, dt_input_trainval)
+    #else:
+        #param_opt = ParamsOptimizer(data_log, train_val_log, val_log, train_log, settings.hyperparameters, labeling,
+        #                            checkers, rules, min_prefix_length, max_prefix_length)
+        #best_model_dict, feature_names = param_opt.params_grid_search(dataset_name, constr_family)
 
     with open(os.path.join(output_dir, 'model_params.csv'), 'a') as f:
         w = csv.writer(f, delimiter='\t')
@@ -319,21 +329,11 @@ def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
     return eval_res
 
 
-def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, eval_res=None, debug=False):
+def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefixing, rules, paths, hyperparams_evaluation, dt_input_trainval, eval_res=None, debug=False):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
     target_label = labeling["target"]
-
-    """ Old code without parameters optimization
-    (frequent_events, frequent_pairs) = generate_frequent_events_and_pairs(train_log, support_threshold)
-    
-    print("Generating decision tree input ...")
-    dt_input = encode_traces(train_log, frequent_events=frequent_events, frequent_pairs=frequent_pairs, checkers=checkers, rules=rules, labeling=labeling)
-
-    print("Generating decision tree ...")
-    paths = generate_decision_tree_paths(dt_input=dt_input, target_label=target_label)
-    """
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
@@ -354,7 +354,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
-                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, rules, settings.fitness_type)
+                path.fitness = calcPathFitnessOnPrefix(prefix.events, path, dt_input_trainval)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
 
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
@@ -364,11 +364,11 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                 paths = sorted(paths, key=lambda path: (- path.fitness), reverse=False)
 
             reranked_paths = copy.deepcopy(paths)
-            if settings.reranking:
+            if settings.reranking: # è false
                 reranked_paths = paths[:settings.top_K_paths]
                 reranked_paths = sorted(reranked_paths, key=lambda path: (- path.score), reverse=False)
 
-            if settings.compute_gain and len(reranked_paths) > 0:
+            if settings.compute_gain and len(reranked_paths) > 0: #è false
                 raw_prefix = [event['concept:name'] for event in prefix.events]
                 trace = test_log[prefix.trace_num]
                 path = reranked_paths[0]
@@ -381,12 +381,12 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
 
             selected_path = None
             for path_index, path in enumerate(reranked_paths):
-
                 if selected_path and (path.fitness != selected_path.fitness or path.impurity != selected_path.impurity
                                       or path.num_samples != selected_path.num_samples):
                     break
 
-                recommendation = recommend(prefix.events, path, rules)
+                recommendation = recommend(prefix.events, path, dt_input_trainval)
+                #print(recommendation)
                 # print(f"{prefix_length} {prefix.trace_num} {prefix.trace_id} {path_index}->{recommendation}")
 
                 if recommendation != "Contradiction" and recommendation != "":
@@ -396,8 +396,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     selected_path = path
                     trace = test_log[prefix.trace_num]
                     #print(prefix.trace_id, trace[0]['label'])
-                    is_compliant, e = evaluate(trace, path, rules, labeling, sat_threshold=hyperparams_evaluation[0],
-                                               eval_type=settings.sat_type)
+                    is_compliant, e = evaluate(trace, path, prefixing['length'],  dt_input_trainval, labeling=labeling, sat_threshold=hyperparams_evaluation[0])
                     #if prefix_length == 12 or prefix_length == 12:
                         #pdb.set_trace()
                     #pdb.set_trace()
@@ -441,10 +440,14 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                         eval_res.fn += 1
                     elif e == ConfusionMatrix.TN:
                         eval_res.tn += 1
+                    
+                    prefixes=[]
+                    for n in prefix.events:
+                        prefixes.append(n['concept:name'])
 
                     recommendation_model = Recommendation(
                         trace_id=prefix.trace_id,
-                        prefix_len=len(prefix.events),
+                        prefix_len=len(prefixes),
                         complete_trace=generate_prefix_path(test_log[prefix.trace_num]),
                         current_prefix=generate_prefix_path(prefix.events),
                         actual_label=generate_label(trace, labeling).name,
@@ -563,25 +566,21 @@ def write_recommendations_to_csv(recommendations, dataset):
 
 def prefix_evaluation_to_csv(result_dict, dataset):
     csv_file = os.path.join(settings.results_dir, f"{dataset}_evaluation.csv")
-    fieldnames = ["prefix_length", "num_cases"]
-    basic_fields = ["comp", "non_comp", "pos_comp", "pos_non_comp", "tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
-    for constr_family in result_dict.keys():
-        fieldnames += [f"{constr_family}_{field}" for field in basic_fields]
+    fieldnames = ["prefix_length", "num_cases", "tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
+    basic_fields = ["tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
 
     try:
-        with open(csv_file, 'w') as f:
+        with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(fieldnames)
-            res_dict = {}
-            for constr_family in result_dict:
-                res_dict[constr_family] = []
-                for eval_obj in result_dict[constr_family]:
-                    res_dict[constr_family].append([eval_obj.prefix_length, eval_obj.num_cases] +
-                                                    [getattr(eval_obj, field) for field in basic_fields])
+            
+            res_list = [] 
+            
+            for eval_obj in result_dict:
+                res_list.append([eval_obj.prefix_length, eval_obj.num_cases] +
+                                [getattr(eval_obj, field) for field in basic_fields])
 
-            table_res = res_dict[list(res_dict.keys())[0]]
-            for constr_family in list(res_dict.keys())[1:]:
-                table_res = np.hstack((table_res, np.array(res_dict[constr_family])[:, 2:]))
+            table_res = np.array(res_list)  # Convertemo la lista in un array numpy
 
             for row in table_res:
                 writer.writerow(row)
