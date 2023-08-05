@@ -71,7 +71,7 @@ datasets_names = ["bpic2011_f1", "bpic2011_f2", "bpic2011_f3", "bpic2011_f4",
                   "sepsis_cases_1", "sepsis_cases_2", "sepsis_cases_4", "traffic_fines_1"]
 datasets_names = ["Production"]
 """
-datasets_names = ["sepsis_cases_2"]
+datasets_names = ["sepsis_cases_4"]
 # ================ hyperparameters ================
 """
 hyperparameters = {'support_threshold': [support_threshold_dict['min']-0.2, support_threshold_dict['min']-0.1,
@@ -109,7 +109,8 @@ method_label = {'existence': r'$\mathcal{E}$', 'choice': r'$\mathcal{\widehat{C}
                 'positive relations': r'$\mathcal{\widehat{PR}}$', 'negative relations': r'$\mathcal{\widehat{NR}}$',
                 'all': r'$\mathcal{A}$'}
 method_marker = {'existence': 'x', 'choice': '1', 'positive relations': '.', 'negative relations': '', 'all': '+'}
-method_color = {'existence': 'mediumpurple', 'choice': 'deepskyblue', 'positive relations': 'orange',
-                'negative relations': 'crimson', 'all': 'forestgreen'}
+#method_color = {'existence': 'mediumpurple', 'choice': 'deepskyblue', 'positive relations': 'orange',
+#                'negative relations': 'crimson', 'all': 'forestgreen'}
+method_color = 'orange'
 method_style = {'existence': 'solid', 'choice': (0, (1, 1)), 'positive relations': 'dashdot',
                 'negative relations': (0, (5, 10)), 'all': 'dashdot'}

@@ -42,7 +42,7 @@ TRACE_TO_DF = {
     # EncodingType.DECLARE.value : declare_features
 }
 
-def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, support_threshold_dict, render_dt, num_feat_strategy, dt_input_trainval):
+def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input_trainval):
     print("DT params optimization ...")
     categories = [TraceLabel.FALSE.value, TraceLabel.TRUE.value]
     model_dict = {'dataset_name': dataset_name, 'parameters': (),
@@ -93,8 +93,6 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
             if len(trace) > 2:
                 data.append(trace)
 
-    dt_input_trainval = dt_input_trainval.encode_traces()
-
     X_train = pd.DataFrame(dt_input_trainval.encoded_data, columns=dt_input_trainval.features)
     y_train = pd.Categorical(dt_input_trainval.labels, categories=categories)
     #print(X_train)
@@ -102,7 +100,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     X_train = X_train.astype(str)
     prefix_columns = [col for col in X_train.columns if col.startswith('prefix_')]
     one_hot_data = pd.get_dummies(X_train[prefix_columns], drop_first=True)
-    print(one_hot_data.columns)
+    #print(one_hot_data.columns)
 
     #num_feat = len(dt_input_trainval.features) -1
     #sel = SelectKBest(mutual_info_classif, k=num_feat)
@@ -110,6 +108,7 @@ def find_best_dt(dataset_name, constr_family, data, checkers, rules, labeling, s
     #new_feature_names = np.array(dt_input_trainval.features)[1:4]
     new_feature_names = np.array(one_hot_data.columns)
     #print(new_feature_names)
+    #print(y_train)
     #print(X_train)
 
     print("Grid search ...")

@@ -67,11 +67,10 @@ class Encoding:
             feature_list=train_cols,
             #target_event=CONF['target_event']
         )
-
         self.encoder = Encoder(df=self.df, attribute_encoding=self.CONF['attribute_encoding'])
+        self.encoded = 0
 
     def encode_traces(self):
-        
         self.encoder.encode(df=self.df)
         #print(df)
 
@@ -80,7 +79,7 @@ class Encoding:
         labels = []
         column_names = list(self.df.columns[0:self.prefix+1])
         for index, row in self.df.iterrows():  
-            labels.append(row['label'] -1)
+            labels.append(int(row['label']) - 1)
             encoded_data.append(list(row[0:self.prefix+1]))  
         if not features:
             features = list(column_names)

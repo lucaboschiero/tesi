@@ -224,8 +224,8 @@ def test_dt(test_log, train_log, labeling, prefixing, support_threshold, checker
     return dt_score(dt_input=dt_input)
 
 
-def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling, support_threshold, checkers, rules,
-                           dataset_name, constr_family, output_dir, min_prefix_length, max_prefix_length, feat_strategy , dt_input_trainval):
+def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling, support_threshold,
+                           dataset_name, output_dir, dt_input_trainval):
     if labeling["threshold_type"] == LabelThresholdType.LABEL_MEAN:
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
@@ -237,12 +237,12 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
 
     print("Generating decision tree with params optimization ...")
     if settings.optmize_dt:
-        best_model_dict, feature_names = find_best_dt(dataset_name, constr_family, train_val_log, checkers, rules,
-                                                      labeling, support_threshold, settings.print_dt, feat_strategy, dt_input_trainval)
-    else:
-        param_opt = ParamsOptimizer(data_log, train_val_log, val_log, train_log, settings.hyperparameters, labeling,
-                                    checkers, rules, min_prefix_length, max_prefix_length)
-        best_model_dict, feature_names = param_opt.params_grid_search(dataset_name, constr_family)
+        best_model_dict, feature_names = find_best_dt(dataset_name, train_val_log, 
+                                                      support_threshold, settings.print_dt, dt_input_trainval)
+    #else:
+        #param_opt = ParamsOptimizer(data_log, train_val_log, val_log, train_log, settings.hyperparameters, labeling,
+        #                            checkers, rules, min_prefix_length, max_prefix_length)
+        #best_model_dict, feature_names = param_opt.params_grid_search(dataset_name, constr_family)
 
     with open(os.path.join(output_dir, 'model_params.csv'), 'a') as f:
         w = csv.writer(f, delimiter='\t')
@@ -386,7 +386,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     break
 
                 recommendation = recommend(prefix.events, path, dt_input_trainval)
-                print(recommendation)
+                #print(recommendation)
                 # print(f"{prefix_length} {prefix.trace_num} {prefix.trace_id} {path_index}->{recommendation}")
 
                 if recommendation != "Contradiction" and recommendation != "":
@@ -566,25 +566,21 @@ def write_recommendations_to_csv(recommendations, dataset):
 
 def prefix_evaluation_to_csv(result_dict, dataset):
     csv_file = os.path.join(settings.results_dir, f"{dataset}_evaluation.csv")
-    fieldnames = ["prefix_length", "num_cases"]
-    basic_fields = ["comp", "non_comp", "pos_comp", "pos_non_comp", "tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
-    for constr_family in result_dict.keys():
-        fieldnames += [f"{constr_family}_{field}" for field in basic_fields]
+    fieldnames = ["prefix_length", "num_cases", "tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
+    basic_fields = ["tp", "fp", "tn", "fn", "precision", "recall", "fscore"]
 
     try:
-        with open(csv_file, 'w') as f:
+        with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(fieldnames)
-            res_dict = {}
-            for constr_family in result_dict:
-                res_dict[constr_family] = []
-                for eval_obj in result_dict[constr_family]:
-                    res_dict[constr_family].append([eval_obj.prefix_length, eval_obj.num_cases] +
-                                                    [getattr(eval_obj, field) for field in basic_fields])
+            
+            res_list = [] 
+            
+            for eval_obj in result_dict:
+                res_list.append([eval_obj.prefix_length, eval_obj.num_cases] +
+                                [getattr(eval_obj, field) for field in basic_fields])
 
-            table_res = res_dict[list(res_dict.keys())[0]]
-            for constr_family in list(res_dict.keys())[1:]:
-                table_res = np.hstack((table_res, np.array(res_dict[constr_family])[:, 2:]))
+            table_res = np.array(res_list)  # Convertemo la lista in un array numpy
 
             for row in table_res:
                 writer.writerow(row)
