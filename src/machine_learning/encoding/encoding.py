@@ -88,7 +88,7 @@ class Encoding:
         #print("Features: ",features)
         #print(encoded_data)
         #print("Labels: ",labels)
-        return DTInput(features, encoded_data, labels)
+        return DTInput(features, encoded_data, labels), self.prefix
     
     def decode(self, log):
         prefix_columns = {}

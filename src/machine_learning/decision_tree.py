@@ -71,22 +71,6 @@ def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input
 
     # Generating decision tree input
     if settings.train_prefix_log:
-        """
-        data_log = log.EventLog()
-        trainval_prefixes = generate_prefixes(data, prefixing)['UPTO']
-        for prefix in trainval_prefixes:
-            trace_xes = log.Trace()
-            #pdb.set_trace()
-            trace_xes.attributes["concept:name"] = prefix.trace_id
-            for event in prefix.events:
-                event_xes = log.Event()
-                #pdb.set_trace()
-                event_xes["concept:name"] = event["concept:name"]
-                event_xes["time:timestamp"] = event["time:timestamp"]
-                event_xes["label"] = event["label"]
-                trace_xes.append(event_xes)
-            data_log.append(trace_xes)
-        """
         prefix_log, trace_ids = get_log_with_log_prefixes(data)
         data = log.EventLog()
         for trace in prefix_log:

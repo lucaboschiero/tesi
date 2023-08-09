@@ -103,9 +103,14 @@ def rec_sys_exp(dataset_name):
     """
 
     dt_input_trainval = Encoding(train_val_log)
-    dt_input_trainval_encoded = dt_input_trainval.encode_traces()
+    dt_input_trainval_encoded, prefix_length = dt_input_trainval.encode_traces()
     # generate recommendations and evaluation
     results = []
+
+    if(max_prefix_length_test > prefix_length):
+        max_prefix_length_test = prefix_length-1
+    if(max_prefix_length_val > prefix_length):
+        max_prefix_length_val = prefix_length-1
 
     prefix_lenght_list_test = list(range(min_prefix_length, max_prefix_length_test + 1))
     prefix_lenght_list_val = list(range(min_prefix_length, max_prefix_length_val + 1))
@@ -123,7 +128,7 @@ def rec_sys_exp(dataset_name):
 
     for feat_strategy in settings.num_feat_strategy:
         #print("------------------------",feat_strategy)
-        tmp_paths = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
+        tmp_paths, dt = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
                                            dataset_name=dataset_name,
                                            output_dir=settings.output_dir,dt_input_trainval=dt_input_trainval_encoded)
         feat_strategy_paths_dict[feat_strategy] = tmp_paths
@@ -142,7 +147,6 @@ def rec_sys_exp(dataset_name):
                 prefixing = {
                     "type": PrefixType.ONLY,
                     "length": prefix_len
-                    #"length": 4
                 }
                 recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
                                                                                       train_log=train_log,
@@ -156,7 +160,8 @@ def rec_sys_exp(dataset_name):
                                                                                       )
                 if settings.cumulative_res is True:
                     eval_res = copy.deepcopy(evaluation)
-                res_val_list.append(eval_res.fscore)
+                #res_val_list.append(eval_res.fscore)
+                res_val_list.append(evaluation.fscore)
             results_hyperparams_evaluation[(feat_strategy, ) + hyperparams_evaluation] = np.mean(res_val_list)
 
     results_hyperparams_evaluation = dict(sorted(results_hyperparams_evaluation.items(), key=lambda item: item[1]))
@@ -179,13 +184,13 @@ def rec_sys_exp(dataset_name):
             "type": PrefixType.ONLY,
             "length": prefix_len
         }
-        recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
+        recommendations, evaluation = generate_recommendations_and_evaluation(test_log=test_log,
                                                                               train_log=train_log,
                                                                               labeling=labeling,
                                                                               prefixing=prefixing,
                                                                               rules=settings.rules,
                                                                               paths=paths,
-                                                                              hyperparams_evaluation=hyperparams_evaluation,
+                                                                              hyperparams_evaluation=best_hyperparams_combination,
                                                                               eval_res=eval_res,
                                                                               dt_input_trainval=dt_input_trainval
                                                                               )
@@ -206,7 +211,7 @@ def rec_sys_exp(dataset_name):
                 writer.writerow([constr_family] + [getattr(res_obj, metric) for res_obj in results[constr_family]])
         """
     prefix_evaluation_to_csv(results, dataset_name)
-    return dataset_name, results, best_hyperparams_combination, max_prefix_length_test, min_prefix_length
+    return dataset_name, results, best_hyperparams_combination, max_prefix_length_test, min_prefix_length, dt
 
 
 if __name__ == "__main__":
@@ -227,7 +232,7 @@ if __name__ == "__main__":
         start_time = time.time()
         if jobs is None or jobs == 1:
             for dataset in settings.datasets_names:
-                _, res_obj, hyperparams, max_pref_length, min_pref_length = rec_sys_exp(dataset)
+                _, res_obj, hyperparams, max_pref_length, min_pref_length, dt = rec_sys_exp(dataset)
                 final_results[dataset] = res_obj
         else:
             tmp_list_results = []
@@ -243,9 +248,9 @@ if __name__ == "__main__":
 
         with open(os.path.join(settings.output_dir, f"results.csv"), mode='w') as out_file:
             writer = csv.writer(out_file, delimiter=',')
-            writer.writerow(["Dataset", "Score", "Best hyperparams configuration", "Min prefix length", "Max prefix length"])
+            writer.writerow(["Dataset", "Score", "Best hyperparams configuration", "Min prefix length", "Max prefix length", "Decision Tree parameters"])
             for dataset in settings.datasets_names:
                 writer.writerow([dataset] +
                                 [round(100*np.mean([getattr(res_obj, 'fscore') for res_obj in final_results[dataset]]), 2)] + 
-                                [hyperparams] + [min_pref_length] + [max_pref_length])
+                                [hyperparams] + [min_pref_length] + [max_pref_length] + [dt['parameters']])
         print(f"Simulations took {(time.time() - start_time) / 3600.} hours")

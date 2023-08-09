@@ -8,7 +8,7 @@ top_K_paths = 6
 reranking = False
 sat_type = 'count_occurrences'  # count_occurrences or count_activations or strong
 fitness_type = 'mean'  # mean or wmean
-cumulative_res = True
+cumulative_res = False
 optmize_dt = True
 print_dt = True
 compute_gain = False
@@ -71,7 +71,7 @@ datasets_names = ["bpic2011_f1", "bpic2011_f2", "bpic2011_f3", "bpic2011_f4",
                   "sepsis_cases_1", "sepsis_cases_2", "sepsis_cases_4", "traffic_fines_1"]
 datasets_names = ["Production"]
 """
-datasets_names = ["sepsis_cases_4"]
+datasets_names = ["sepsis_cases_2"]
 # ================ hyperparameters ================
 """
 hyperparameters = {'support_threshold': [support_threshold_dict['min']-0.2, support_threshold_dict['min']-0.1,
@@ -88,7 +88,8 @@ dt_hyperparameters = {'criterion': ['entropy', 'gini'],
 
 num_feat_strategy = ['sqrt',  0.3, 0.5]
 #num_feat_strategy = [0.5]
-sat_threshold_list = [0.55, 0.65, 0.75, 0.85]
+#sat_threshold_list = [0.55, 0.65, 0.75, 0.85]
+sat_threshold_list = [0.35, 0.45, 0.55, 0.65]
 #sat_threshold_list = [0.85]
 weight_combination_list = [(0.2, 0.4, 0.4), (0.6, 0.2, 0.2), (0.4, 0.4, 0.2), (0.4, 0.2, 0.4), (0.8, 0.1, 0.1), (0.4, 0.3, 0.3), (0.1, 0.8, 0.1), (0.1, 0.1, 0.8)]
 #weight_combination_list = [(0.4, 0.4, 0.2)]

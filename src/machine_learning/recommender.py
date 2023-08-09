@@ -107,7 +107,6 @@ class ParamsOptimizer:
 
 
 def recommend(prefix, path, dt_input_trainval):
-
     recommendation = ""
 
     prefixes=[]
@@ -132,7 +131,6 @@ def recommend(prefix, path, dt_input_trainval):
             rec = rec.tolist()
             #print(rec)
             rec_str = dt_input_trainval.decode(rec)
-
             for column in rec_str.columns:
                 if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
                     if state == TraceState.VIOLATED:
@@ -148,7 +146,6 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
     # Compliantness con different strategies
     is_compliant = True
     #sat_threshold = 1 # thresold da cambiare
-
     activities = []
     for idx, event in enumerate(trace):
         for attribute_key, attribute_value in event.items():
@@ -252,7 +249,7 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
     print("Generating decision tree paths ...")
     paths = generate_paths(dtc=best_model_dict['model'], dt_input_features=feature_names,
                            target_label=target_label)
-    return paths
+    return paths, best_model_dict
 
 
 def evaluate_recommendations(input_log, labeling, prefixing, rules, paths):
@@ -337,6 +334,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
 
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
+    #print(prefixing["length"])
     print("Generating recommendations ...")
     recommendations = []
     if eval_res is None:
@@ -349,20 +347,17 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
         # for id, pref in enumerate(test_prefixes[prefix_length]): print(id, test_log[pref.trace_num][0]['label'])
         for prefix in test_prefixes[prefix_length]:
             eval_res.num_cases = len(test_prefixes[prefix_length])
-
             pos_paths_total_samples = 0
             for path in paths:
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
                 path.fitness = calcPathFitnessOnPrefix(prefix.events, path, dt_input_trainval)
                 path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
-
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
             if settings.use_score:
                 paths = sorted(paths, key=lambda path: (- path.score), reverse=False)
             else:
                 paths = sorted(paths, key=lambda path: (- path.fitness), reverse=False)
-
             reranked_paths = copy.deepcopy(paths)
             if settings.reranking: # è false
                 reranked_paths = paths[:settings.top_K_paths]
@@ -410,28 +405,8 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                             print(e)
                             print(prefix_length)
                             #pdb.set_trace()
-                        """
-                        if len(recommendation) > 50:
-                            print(e)
-                            print(prefix.trace_id)
-                            print(prefix_length)
-                            pdb.set_trace()
-                        """
 
-                    """
-                    if prefix_length > 2:
-                        is_compliant, e = evaluate(trace, path, rules, labeling)
-                        # c
-                        # for path in paths: print(f"{path.fitness:.2f}, {1 - path.impurity:.2f}, {path.num_samples['node_samples']:.2f}")
-                        # for path in reranked_paths: print(f"{path.fitness:.2f}, {1 - path.impurity:.2f}, {path.num_samples['positive']/path.num_samples['total']:.2f}")
-                        #recommend(test_prefixes[prefix_length][idd].events, paths[0], rules)
-                        #len(paths[0])
-                        #for rule in paths[0].rules: print(rule)
-                        # paths[0].rules
-                        len(test_prefixes[prefix_length])
-                        for path in paths: print(evaluate(trace, path, rules, labeling))
-                        for idx, path in enumerate(reranked_paths): print(idx, evaluate(trace, path, rules, labeling))
-                    """
+
                     if e == ConfusionMatrix.TP:
                         eval_res.tp += 1
                     elif e == ConfusionMatrix.FP:
@@ -484,7 +459,6 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
         eval_res.fscore = 2 * eval_res.precision * eval_res.recall / (eval_res.precision + eval_res.recall)
     except ZeroDivisionError:
         eval_res.fscore = 0
-
     try:
         fpr, tpr, thresholds = metrics.roc_curve(np.array(y), np.array(pred), pos_label=target_label.name)
         eval_res.auc = metrics.auc(fpr, tpr)
