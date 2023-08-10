@@ -44,7 +44,7 @@ class Encoding:
 
         #self.prefix = max(case_counts.values())
         self.prefix = int(average)
-
+        
         self.CONF = {  # This contains the configuration for the run
         'data': log,
         'prefix_length_strategy': 'fixed',

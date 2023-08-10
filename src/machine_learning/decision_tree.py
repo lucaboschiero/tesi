@@ -88,7 +88,6 @@ def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input
 
     #num_feat = len(dt_input_trainval.features) -1
     #sel = SelectKBest(mutual_info_classif, k=num_feat)
-    #X_train = sel.fit_transform(X_train[['prefix_1', 'prefix_2', 'prefix_3']], y_train)
     #new_feature_names = np.array(dt_input_trainval.features)[1:4]
     new_feature_names = np.array(one_hot_data.columns)
     #print(new_feature_names)

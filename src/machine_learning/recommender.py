@@ -114,7 +114,6 @@ def recommend(prefix, path, dt_input_trainval):
         prefixes.append(trace['concept:name'])
     num_prefixes = len(prefixes)
 
-
     for rule in path.rules:
         feature, state, parent = rule
 
@@ -123,13 +122,11 @@ def recommend(prefix, path, dt_input_trainval):
             num1 = n1
             num2 = n2
 
-        #print(feature)
-        #print(n_prefix)
         if (num1) > num_prefixes: 
             rec = np.zeros(num1, dtype=int)
             rec[num1 -1 ] = int(num2)
             rec = rec.tolist()
-            #print(rec)
+            
             rec_str = dt_input_trainval.decode(rec)
             for column in rec_str.columns:
                 if (rec_str[column].iloc[0] != '0') and rec_str[column].notnull().any():
@@ -147,6 +144,7 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
     is_compliant = True
     #sat_threshold = 1 # thresold da cambiare
     activities = []
+    
     for idx, event in enumerate(trace):
         for attribute_key, attribute_value in event.items():
             if (attribute_key == 'concept:name'):
@@ -156,10 +154,18 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
     #print(activities)
 
     hyp = []
+    hypInt= []
     for column in activities.columns:
         hyp.extend(activities[column].values)
     hyp = np.array(hyp)
     hyp = hyp.tolist()
+
+    for value in hyp:
+        if isinstance(value, str) and value.isdigit():  # Controlla se è una stringa rappresentante un numero
+            hypInt.append(int(value))
+    if len(hypInt) > 0:
+        hyp = copy.deepcopy(hypInt)       
+    #print(num_prefixes)
     #print(hyp)
     hyp = hyp[num_prefixes:]
     #print(hyp)
@@ -359,6 +365,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
             else:
                 paths = sorted(paths, key=lambda path: (- path.fitness), reverse=False)
             reranked_paths = copy.deepcopy(paths)
+
             if settings.reranking: # è false
                 reranked_paths = paths[:settings.top_K_paths]
                 reranked_paths = sorted(reranked_paths, key=lambda path: (- path.score), reverse=False)
@@ -391,7 +398,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     selected_path = path
                     trace = test_log[prefix.trace_num]
                     #print(prefix.trace_id, trace[0]['label'])
-                    is_compliant, e = evaluate(trace, path, prefixing['length'],  dt_input_trainval, labeling=labeling, sat_threshold=hyperparams_evaluation[0])
+                    is_compliant, e = evaluate(trace, path, prefix_length,  dt_input_trainval, labeling=labeling, sat_threshold=hyperparams_evaluation[0])
                     #if prefix_length == 12 or prefix_length == 12:
                         #pdb.set_trace()
                     #pdb.set_trace()

@@ -108,9 +108,11 @@ def rec_sys_exp(dataset_name):
     results = []
 
     if(max_prefix_length_test > prefix_length):
-        max_prefix_length_test = prefix_length-1
+        max_prefix_length_test = prefix_length -1
+        #print(max_prefix_length_test)
     if(max_prefix_length_val > prefix_length):
-        max_prefix_length_val = prefix_length-1
+        max_prefix_length_val = prefix_length -1
+        #print(max_prefix_length_test)
 
     prefix_lenght_list_test = list(range(min_prefix_length, max_prefix_length_test + 1))
     prefix_lenght_list_val = list(range(min_prefix_length, max_prefix_length_val + 1))
@@ -246,7 +248,7 @@ if __name__ == "__main__":
 
             final_results = dict(tmp_list_results)
 
-        with open(os.path.join(settings.output_dir, f"results.csv"), mode='w') as out_file:
+        with open(os.path.join(settings.output_dir, f"results.csv"), mode='a') as out_file:
             writer = csv.writer(out_file, delimiter=',')
             writer.writerow(["Dataset", "Score", "Best hyperparams configuration", "Min prefix length", "Max prefix length", "Decision Tree parameters"])
             for dataset in settings.datasets_names:
