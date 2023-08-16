@@ -128,11 +128,12 @@ def rec_sys_exp(dataset_name):
         for v2 in settings.weight_combination_list:
             hyperparams_evaluation_list.append((v1,) + v2)
 
-    for feat_strategy in settings.num_feat_strategy:
-        #print("------------------------",feat_strategy)
-        tmp_paths, dt = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
+    tmp_paths, dt = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
                                            dataset_name=dataset_name,
                                            output_dir=settings.output_dir,dt_input_trainval=dt_input_trainval_encoded)
+    
+    for feat_strategy in settings.num_feat_strategy:
+        #print("------------------------",feat_strategy)
         feat_strategy_paths_dict[feat_strategy] = tmp_paths
 
         # discovering on val set with best hyperparams_evaluation setting

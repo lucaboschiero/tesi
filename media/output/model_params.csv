@@ -470,3 +470,6 @@ sepsis_cases_4	('balanced', 'gini', None, 10, 0.2)	20.72	34.33	-1	40
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
+sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
+sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
+sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
