@@ -473,3 +473,5 @@ sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
+bpic2012_cancelled	(None, 'gini', 10, 16, 2)	79.59	79.74	-1	10
+Production	('balanced', 'gini', None, 16, 2)	64.01	78.53	-1	28

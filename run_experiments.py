@@ -132,6 +132,8 @@ def rec_sys_exp(dataset_name):
                                            dataset_name=dataset_name,
                                            output_dir=settings.output_dir,dt_input_trainval=dt_input_trainval_encoded)
     
+    counter = 0
+
     for feat_strategy in settings.num_feat_strategy:
         #print("------------------------",feat_strategy)
         feat_strategy_paths_dict[feat_strategy] = tmp_paths
@@ -142,6 +144,7 @@ def rec_sys_exp(dataset_name):
             hyperparams_evaluation_list = hyperparams_evaluation_list_baseline
 
         for hyperparams_evaluation in hyperparams_evaluation_list:
+            counter = counter +1
             res_val_list = []
             eval_res = None
             if settings.cumulative_res is True:
@@ -151,6 +154,8 @@ def rec_sys_exp(dataset_name):
                     "type": PrefixType.ONLY,
                     "length": prefix_len
                 }
+                print("Counter: ", counter)
+                print("reccomendation", prefix_len, "/", max_prefix_length_val)
                 recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
                                                                                       train_log=train_log,
                                                                                       labeling=labeling,
@@ -187,6 +192,7 @@ def rec_sys_exp(dataset_name):
             "type": PrefixType.ONLY,
             "length": prefix_len
         }
+        print("evaluation", prefix_len, "/", max_prefix_length_test)
         recommendations, evaluation = generate_recommendations_and_evaluation(test_log=test_log,
                                                                               train_log=train_log,
                                                                               labeling=labeling,
