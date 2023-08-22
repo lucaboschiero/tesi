@@ -117,7 +117,7 @@ def rec_sys_exp(dataset_name):
     prefix_lenght_list_test = list(range(min_prefix_length, max_prefix_length_test + 1))
     prefix_lenght_list_val = list(range(min_prefix_length, max_prefix_length_val + 1))
 
-    feat_strategy_paths_dict = {strategy: None for strategy in settings.num_feat_strategy}
+    #feat_strategy_paths_dict = {strategy: None for strategy in settings.num_feat_strategy}
     hyperparams_evaluation_list = []
     results_hyperparams_evaluation = {}
     hyperparams_evaluation_list_baseline = []
@@ -129,47 +129,46 @@ def rec_sys_exp(dataset_name):
             hyperparams_evaluation_list.append((v1,) + v2)
 
     tmp_paths, dt = train_path_recommender(data_log=data_log, train_val_log=train_val_log, val_log=val_log, train_log=train_log, labeling=labeling, support_threshold=settings.support_threshold_dict,
-                                           dataset_name=dataset_name,
-                                           output_dir=settings.output_dir,dt_input_trainval=dt_input_trainval_encoded)
+                                       dataset_name=dataset_name,
+                                       output_dir=settings.output_dir,dt_input_trainval=dt_input_trainval_encoded)
+
     
-    for feat_strategy in settings.num_feat_strategy:
-        #print("------------------------",feat_strategy)
-        feat_strategy_paths_dict[feat_strategy] = tmp_paths
 
-        # discovering on val set with best hyperparams_evaluation setting
-        print(f"Hyper params for evaluation for {dataset_name} ...")
-        if settings.compute_baseline:
-            hyperparams_evaluation_list = hyperparams_evaluation_list_baseline
+    # discovering on val set with best hyperparams_evaluation setting
+    print(f"Hyper params for evaluation for {dataset_name} ...")
+    if settings.compute_baseline:
+        hyperparams_evaluation_list = hyperparams_evaluation_list_baseline
 
-        for hyperparams_evaluation in hyperparams_evaluation_list:
-            res_val_list = []
-            eval_res = None
+    for hyperparams_evaluation in hyperparams_evaluation_list:
+        res_val_list = []
+        eval_res = None
+        if settings.cumulative_res is True:
+            eval_res = EvaluationResult()
+        for pref_id, prefix_len in enumerate(prefix_lenght_list_val):
+            prefixing = {
+                "type": PrefixType.ONLY,
+                "length": prefix_len
+            }
+            print("recommendation", prefix_len, "/", max_prefix_length_val)
+            recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
+                                                                                  train_log=train_log,
+                                                                                  labeling=labeling,
+                                                                                  prefixing=prefixing,
+                                                                                  rules=settings.rules,
+                                                                                  paths=tmp_paths,
+                                                                                  hyperparams_evaluation=hyperparams_evaluation,
+                                                                                  eval_res=eval_res,
+                                                                                  dt_input_trainval=dt_input_trainval
+                                                                                  )
             if settings.cumulative_res is True:
-                eval_res = EvaluationResult()
-            for pref_id, prefix_len in enumerate(prefix_lenght_list_val):
-                prefixing = {
-                    "type": PrefixType.ONLY,
-                    "length": prefix_len
-                }
-                recommendations, evaluation = generate_recommendations_and_evaluation(test_log=val_log,
-                                                                                      train_log=train_log,
-                                                                                      labeling=labeling,
-                                                                                      prefixing=prefixing,
-                                                                                      rules=settings.rules,
-                                                                                      paths=tmp_paths,
-                                                                                      hyperparams_evaluation=hyperparams_evaluation,
-                                                                                      eval_res=eval_res,
-                                                                                      dt_input_trainval=dt_input_trainval
-                                                                                      )
-                if settings.cumulative_res is True:
-                    eval_res = copy.deepcopy(evaluation)
-                #res_val_list.append(eval_res.fscore)
-                res_val_list.append(evaluation.fscore)
-            results_hyperparams_evaluation[(feat_strategy, ) + hyperparams_evaluation] = np.mean(res_val_list)
+                eval_res = copy.deepcopy(evaluation)
+            #res_val_list.append(eval_res.fscore)
+            res_val_list.append(evaluation.fscore)
+        results_hyperparams_evaluation[ hyperparams_evaluation] = np.mean(res_val_list)
 
     results_hyperparams_evaluation = dict(sorted(results_hyperparams_evaluation.items(), key=lambda item: item[1]))
     best_hyperparams_combination = list(results_hyperparams_evaluation.keys())[-1]
-    paths = feat_strategy_paths_dict[best_hyperparams_combination[0]]
+    paths = tmp_paths
     best_hyperparams_combination = best_hyperparams_combination[1:]
     print(f"BEST HYPERPARAMS COMBINATION {best_hyperparams_combination}")
     print(f"MIN & MAX PREFIX LENGTH {min_prefix_length} {max_prefix_length_test}")
@@ -187,6 +186,7 @@ def rec_sys_exp(dataset_name):
             "type": PrefixType.ONLY,
             "length": prefix_len
         }
+        print("evaluation", prefix_len, "/", max_prefix_length_test)
         recommendations, evaluation = generate_recommendations_and_evaluation(test_log=test_log,
                                                                               train_log=train_log,
                                                                               labeling=labeling,

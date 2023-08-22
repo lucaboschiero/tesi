@@ -473,3 +473,5 @@ sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
 sepsis_cases_2	(None, 'entropy', 4, 10, 0.1)	94.53	94.68	-1	4
+bpic2012_accepted	('balanced', 'entropy', 10, 1, 2)	69.97	70.3	-1	10
+bpic2012_accepted	('balanced', 'entropy', 10, 1, 2)	69.97	70.3	-1	10
