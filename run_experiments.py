@@ -134,10 +134,6 @@ def rec_sys_exp(dataset_name):
     
     counter = 0
 
-    for feat_strategy in settings.num_feat_strategy:
-        #print("------------------------",feat_strategy)
-        feat_strategy_paths_dict[feat_strategy] = tmp_paths
-
     # discovering on val set with best hyperparams_evaluation setting
     print(f"Hyper params for evaluation for {dataset_name} ...")
     if settings.compute_baseline:
@@ -170,7 +166,7 @@ def rec_sys_exp(dataset_name):
                     eval_res = copy.deepcopy(evaluation)
                 #res_val_list.append(eval_res.fscore)
                 res_val_list.append(evaluation.fscore)
-            results_hyperparams_evaluation[(feat_strategy, ) + hyperparams_evaluation] = np.mean(res_val_list)
+            results_hyperparams_evaluation[hyperparams_evaluation] = np.mean(res_val_list)
 
     results_hyperparams_evaluation = dict(sorted(results_hyperparams_evaluation.items(), key=lambda item: item[1]))
     best_hyperparams_combination = list(results_hyperparams_evaluation.keys())[-1]
