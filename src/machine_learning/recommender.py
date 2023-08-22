@@ -337,6 +337,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
         labeling["custom_threshold"] = calc_mean_label_threshold(train_log, labeling)
 
     target_label = labeling["target"]
+    #print(test_log)
     print("Generating test prefixes ...")
     test_prefixes = generate_prefixes(test_log, prefixing)
     #print(prefixing["length"])
