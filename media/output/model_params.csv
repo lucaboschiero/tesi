@@ -952,3 +952,9 @@ bpic2012_cancelled	(None, 'gini', 10, 16, 2)	79.59	79.74	-1	10
 
 Production	('balanced', 'gini', None, 16, 2)	64.01	78.53	-1	28
 
+hospital_billing_2	(None, 'gini', 6, 1, 2)	97.66	97.66	-1	6
+hospital_billing_2	(None, 'gini', 6, 1, 2)	97.66	97.66	-1	6
+hospital_billing_2	(None, 'gini', 6, 1, 2)	97.66	97.66	-1	6
+hospital_billing_2	(None, 'gini', 6, 1, 2)	97.66	97.66	-1	6
+hospital_billing_3	(None, 'entropy', 6, 1, 2)	96.99	96.99	-1	6
+bpic2012_accepted	('balanced', 'entropy', 10, 1, 2)	69.97	70.3	-1	10

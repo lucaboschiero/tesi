@@ -112,6 +112,7 @@ def recommend(prefix, path, dt_input_trainval):
     prefixes=[]
     for trace in prefix:
         prefixes.append(trace['concept:name'])
+        print(prefixes)
     num_prefixes = len(prefixes)
 
     for rule in path.rules:
@@ -358,7 +359,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
                 path.fitness = calcPathFitnessOnPrefix(prefix.events, path, dt_input_trainval)
-                path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
+                path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation)
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
             if settings.use_score:
                 paths = sorted(paths, key=lambda path: (- path.score), reverse=False)

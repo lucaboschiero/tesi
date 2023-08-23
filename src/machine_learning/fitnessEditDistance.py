@@ -40,4 +40,4 @@ def edit(ref, hyp):
 
     ed_ratio = ed/maxi
     #print("Edit distance", ed_ratio)
-    return ed_ratio
+    return 1-ed_ratio
