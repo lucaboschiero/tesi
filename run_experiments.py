@@ -38,7 +38,7 @@ def rec_sys_exp(dataset_name):
     train_val_ratio = 0.8
     if dataset_name == "bpic2015_4_f2":
         train_val_ratio = 0.85
-    train_ratio = 0.8
+    train_ratio = 0.9
     train_val_df, test_df = dataset_manager.split_data_strict(data, train_val_ratio)
     train_df, val_df = dataset_manager.split_data(train_val_df, train_ratio, split="random")
 

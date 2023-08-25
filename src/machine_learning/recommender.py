@@ -112,7 +112,7 @@ def recommend(prefix, path, dt_input_trainval):
     prefixes=[]
     for trace in prefix:
         prefixes.append(trace['concept:name'])
-        print(prefixes)
+        #print(prefixes)
     num_prefixes = len(prefixes)
 
     for rule in path.rules:
@@ -235,10 +235,6 @@ def train_path_recommender(data_log, train_val_log, val_log, train_log, labeling
 
     target_label = labeling["target"]
 
-    if dataset_name == 'traffic_fines_1':
-        settings.hyperparameters['class_weight'] = [None]
-        settings.dt_hyperparameters['class_weight'] = [None]
-
     print("Generating decision tree with params optimization ...")
     if settings.optmize_dt:
         best_model_dict, feature_names = find_best_dt(dataset_name, train_val_log, 
@@ -359,7 +355,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                 pos_paths_total_samples += path.num_samples['node_samples']
             for path in paths:
                 path.fitness = calcPathFitnessOnPrefix(prefix.events, path, dt_input_trainval)
-                path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation)
+                path.score = calcScore(path, pos_paths_total_samples, weights=hyperparams_evaluation[1:])
             # paths = sorted(paths, key=lambda path: (- path.fitness, path.impurity, - path.num_samples["total"]), reverse=False)
             if settings.use_score:
                 paths = sorted(paths, key=lambda path: (- path.score), reverse=False)
