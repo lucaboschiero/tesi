@@ -28,8 +28,8 @@ def rec_sys_exp(dataset_name):
     # os.makedirs(os.path.join(results_dir))
 
     # generate rules
-    settings.rules["activation"] = generate_rules(settings.rules["activation"])
-    settings.rules["correlation"] = generate_rules(settings.rules["correlation"])
+    #settings.rules["activation"] = generate_rules(settings.rules["activation"])
+    #settings.rules["correlation"] = generate_rules(settings.rules["correlation"])
 
     dataset_manager = DatasetManager(dataset_name.lower())
     data = dataset_manager.read_dataset(os.path.join(os.getcwd(), settings.dataset_folder))

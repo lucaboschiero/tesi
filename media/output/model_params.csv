@@ -974,3 +974,9 @@ Production	('balanced', 'gini', None, 16, 2)	64.01	78.53	-1	28
 hospital_billing_2	(None, 'gini', 6, 1, 2)	97.66	97.66	-1	6
 hospital_billing_3	(None, 'entropy', 6, 1, 2)	96.99	96.99	-1	6
 bpic2011_f1	(None, 'entropy', 8, 1, 2)	82.14	84.37	-1	8
+bpic2015_1_f2	(None, 'gini', 6, 10, 0.1)	89.61	91.01	-1	6
+bpic2015_2_f2	(None, 'entropy', 10, 10, 0.1)	92.12	94.07	-1	10
+bpic2015_2_f2	(None, 'entropy', 10, 10, 0.1)	92.12	94.07	-1	10
+bpic2015_3_f2	(None, 'gini', None, 10, 0.3)	93.28	96.46	-1	39
+bpic2015_4_f2	(None, 'gini', 10, 10, 0.1)	94.65	95.92	-1	10
+bpic2015_5_f2	(None, 'entropy', None, 10, 0.3)	88.71	90.83	-1	17

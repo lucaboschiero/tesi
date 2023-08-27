@@ -49,9 +49,9 @@ def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input
                   'f1_score_val': None, 'f1_score_train': None, 'f1_prefix_val': None, 'max_depth': 0,
                   'model': None}
 
-    (frequent_events_train, frequent_pairs_train) = generate_frequent_events_and_pairs(data,
-                                                                                       support_threshold_dict['min'])
-
+    #(frequent_events_train, frequent_pairs_train) = generate_frequent_events_and_pairs(data,
+    #                                                                                   support_threshold_dict['min'])
+    """
     if support_threshold_dict['max'] <= 1.0:
         max_frequent_events_train = get_frequent_events(data, support_threshold_dict['max'])
         set_freq_events_max = set(max_frequent_events_train)
@@ -68,7 +68,7 @@ def find_best_dt(dataset_name, data, support_threshold_dict, render_dt, dt_input
                 (x, y) = pair
                 reverse_pair = (y, x)
                 all_frequent_pairs.extend([pair, reverse_pair])
-
+    """
     # Generating decision tree input
     if settings.train_prefix_log:
         prefix_log, trace_ids = get_log_with_log_prefixes(data)
