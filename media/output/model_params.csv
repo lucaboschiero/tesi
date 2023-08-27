@@ -981,3 +981,4 @@ bpic2015_3_f2	(None, 'gini', None, 10, 0.3)	93.28	96.46	-1	39
 bpic2015_4_f2	(None, 'gini', 10, 10, 0.1)	94.65	95.92	-1	10
 bpic2015_5_f2	(None, 'entropy', None, 10, 0.3)	88.71	90.83	-1	17
 bpic2011_f2	(None, 'entropy', None, 10, 0.1)	72.03	83.01	-1	46
+bpic2011_f3	(None, 'entropy', 4, 10, 2)	89.49	90.75	-1	4

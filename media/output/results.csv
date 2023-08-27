@@ -27,3 +27,5 @@ Dataset,Score,Best hyperparams configuration,Min prefix length,Max prefix length
 bpic2015_5_f2,50.04,"(0.65, 0.1, 0.8, 0.1)",1,40,"(None, 'entropy', None, 10, 0.3)"
 Dataset,Score,Best hyperparams configuration,Min prefix length,Max prefix length,Decision Tree parameters
 bpic2011_f2,27.34,"(0.55, 0.1, 0.8, 0.1)",1,40,"(None, 'entropy', None, 10, 0.1)"
+Dataset,Score,Best hyperparams configuration,Min prefix length,Max prefix length,Decision Tree parameters
+bpic2011_f3,37.16,"(0.65, 0.4, 0.2, 0.4)",1,25,"(None, 'entropy', 4, 10, 2)"
