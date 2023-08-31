@@ -72,12 +72,10 @@ datasets_names = ["bpic2011_f1", "bpic2011_f2", "bpic2011_f3", "bpic2011_f4",
 datasets_names = ["Production"]
 """
 """
-datasets_names = ["bpic2012_cancelled", "bpic2012_declined",
-                  "bpic2017_accepted", "bpic2017_cancelled",
-                  "bpic2017_refused"]
+datasets_names = ["bpic2012_accepted"]
 """
 #"bpic2012_cancelled", "bpic2012_declined"
-datasets_names = ["bpic2017_accepted"]
+datasets_names = ["bpic2015_3_f2"]
 # ================ hyperparameters ================
 """
 hyperparameters = {'support_threshold': [support_threshold_dict['min']-0.2, support_threshold_dict['min']-0.1,

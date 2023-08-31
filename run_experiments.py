@@ -141,6 +141,7 @@ def rec_sys_exp(dataset_name):
 
     for hyperparams_evaluation in hyperparams_evaluation_list:
         counter = counter +1
+        timeI=time.time()
         res_val_list = []
         eval_res = None
         if settings.cumulative_res is True:
@@ -167,6 +168,8 @@ def rec_sys_exp(dataset_name):
             #res_val_list.append(eval_res.fscore)
             res_val_list.append(evaluation.fscore)
         results_hyperparams_evaluation[hyperparams_evaluation] = np.mean(res_val_list)
+        timeF=(time.time() - timeI) / 3600.
+        print("Simulation: ",counter, ", time: ",timeF)
 
     results_hyperparams_evaluation = dict(sorted(results_hyperparams_evaluation.items(), key=lambda item: item[1]))
     best_hyperparams_combination = list(results_hyperparams_evaluation.keys())[-1]
