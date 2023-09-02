@@ -160,7 +160,6 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
         hyp.extend(activities[column].values)
     hyp = np.array(hyp)
     hyp = hyp.tolist()
-    print(hyp)
 
     for value in hyp:
         if isinstance(value, str) and value.isdigit():  # Controlla se è una stringa rappresentante un numero
@@ -196,7 +195,7 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
 
     ref = ref[num_prefixes:]
     ref = ref.tolist()
-    print(ref)
+    #print(ref)
 
     ed = evaluateEditDistance.edit(ref, hyp)
     #print(ed)
@@ -213,7 +212,7 @@ def evaluate(trace, path, num_prefixes, dt_input_trainval, sat_threshold, labeli
         cm = ConfusionMatrix.TP if label == TraceLabel.TRUE else ConfusionMatrix.FP
     else:
         cm = ConfusionMatrix.FN if label == TraceLabel.TRUE else ConfusionMatrix.TN
-    print("compliant: ", is_compliant)
+
     return is_compliant, cm
 
 
@@ -386,7 +385,7 @@ def generate_recommendations_and_evaluation(test_log, train_log, labeling, prefi
                     break
 
                 recommendation = recommend(prefix.events, path, dt_input_trainval)
-                print(recommendation)
+                #print(recommendation)
                 # print(f"{prefix_length} {prefix.trace_num} {prefix.trace_id} {path_index}->{recommendation}")
 
                 if recommendation != "Contradiction" and recommendation != "":

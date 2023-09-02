@@ -989,3 +989,7 @@ bpic2012_declined	(None, 'gini', 10, 10, 0.3)	91.36	91.38	-1	10
 bpic2012_cancelled	(None, 'gini', 10, 16, 2)	79.59	79.74	-1	10
 bpic2012_cancelled	(None, 'gini', 10, 16, 2)	79.59	79.74	-1	10
 bpic2012_accepted	('balanced', 'entropy', 10, 1, 2)	69.97	70.3	-1	10
+bpic2015_3_f2	(None, 'gini', None, 10, 0.3)	93.28	96.46	-1	39
+bpic2015_3_f2	(None, 'gini', None, 10, 0.3)	93.28	96.46	-1	39
+bpic2015_3_f2	(None, 'gini', None, 10, 0.3)	93.28	96.46	-1	39
+bpic2012_accepted	('balanced', 'entropy', 10, 1, 2)	69.97	70.3	-1	10
