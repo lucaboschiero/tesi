@@ -10,7 +10,7 @@ The following python package are required:
 - sklearn tested with version 1.2.2
 
 ## How to run
-First of all, clone this repo. Then add the input logs in the folder <code>media/input</code>. The logs used in this experiments are available [here](https://drive.google.com/file/d/1DDP7OKQhD8cno2tbSpLlIPZ-Mh5y-XUC/view). In <code>settings.py</code> there are the the main settings for the experiments.
+First of all, clone this repo. Then add the input logs in the folder <code>media/input</code>. The logs used in this experiments are available [here](https://drive.google.com/file/d/1DDP7OKQhD8cno2tbSpLlIPZ-Mh5y-XUC/view). The <code>settings.py</code> file contains the configuration parameters for the experiments.
 To run the experiment type:
 ```
 $ python run_experiments.py
